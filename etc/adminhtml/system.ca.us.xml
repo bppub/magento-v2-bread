@@ -10,8 +10,8 @@
                     <![CDATA[
                             <div>
                                 <span class="bread-logo"></span>
-                            Bread Pay (v2.4.6) by <a href="https://payments.breadfinancial.com/" target="_blank">payments.breadfinancial.com</a> - <b>Onsite Consumer Financing</b>.
-                            <br/> Developers API reference: <a href="https://docs.breadpayments.com/bread-classic/docs/magento-2/" target="_blank">Bread Developer API Reference</a>
+                            Bread Pay (v2.4.8) by <a href="https://payments.breadfinancial.com/" target="_blank">payments.breadfinancial.com</a> - <b>Onsite Consumer Financing</b>.
+                            <br/> Developers API reference: <a href="https://platform-docs.breadpayments.com/bread-onboarding/docs/magento-2" target="_blank">Bread Developer API Reference</a>
                             </div>
                     ]]>
                 </comment>
@@ -324,7 +324,7 @@
                     <![CDATA[
                             <div>
                                 <span class="rbc-logo"></span>
-                            Payplan by RBC (v2.4.6) <a href="https://www.rbcpayplan.com/" target="_blank">www.rbcpayplan.com</a> - <b>Jump start your eCommerce business with PayPlan Powered by RBC</b>.
+                            Payplan by RBC (v2.4.8) <a href="https://www.rbcpayplan.com/" target="_blank">www.rbcpayplan.com</a> - <b>Jump start your eCommerce business with PayPlan Powered by RBC</b>.
                             <br/> Developer API reference: <a href="https://rbcpayplan.readme.io/rbc-onboarding/docs/magento-2-integration-steps/" target="_blank">Payplan by RBC API Reference</a>
                             </div>
                     ]]>

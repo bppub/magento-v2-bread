@@ -1,0 +1,90 @@
+<?php
+/**
+ * Bread BreadCheckout Hyva - Minicart Button Template
+ *
+ * @var \Bread\BreadCheckout\Block\Checkout\Minicart $block
+ * @var \Magento\Framework\Escaper $escaper
+ */
+
+$integrationKey = $block->getIntegrationKey();
+$configClient = $block->getConfigClient();
+$currencyCode = $block->getCurrentCurrencyCode();
+$productData = json_decode($block->getProductDataJson(), true);
+$isDefaultSize = $block->getIsDefaultSize();
+
+$sdk = $configClient === 'RBC' ? 'RBCPayPlan' : 'BreadPayments';
+?>
+
+<div id="bread-btn-cntnr-minicart" class="bread-minicart-container my-2">
+    <div id="bread-checkout-btn-minicart"
+         class="bread-checkout-btn-minicart"
+         <?= /* @noEscape */ $isDefaultSize ?>>
+    </div>
+</div>
+
+<script>
+(function() {
+    const config = {
+        integrationKey: '<?= $escaper->escapeJs($integrationKey) ?>',
+        sdk: '<?= $escaper->escapeJs($sdk) ?>',
+        currency: '<?= $escaper->escapeJs($currencyCode) ?>',
+        items: <?= /* @noEscape */ json_encode($productData) ?>
+    };
+
+    let wasSetup = false;
+
+    function initBread() {
+        const sdk = window[config.sdk];
+        if (!sdk) {
+            setTimeout(initBread, 100);
+            return;
+        }
+
+        let total = 0;
+        const items = config.items.map(item => {
+            total += item.price * item.quantity;
+            return {
+                name: item.name,
+                quantity: item.quantity,
+                unitPrice: { value: item.price, currency: config.currency },
+                itemUrl: item.detailUrl || '',
+                shippingCost: { value: 0, currency: config.currency },
+                shippingDescription: '',
+                unitTax: { value: 0, currency: config.currency }
+            };
+        });
+
+        const placement = {
+            allowCheckout: false,
+            domID: 'bread-checkout-btn-minicart',
+            order: {
+                currency: config.currency,
+                items: items,
+                subTotal: { value: total, currency: config.currency },
+                totalPrice: { value: total, currency: config.currency },
+                totalDiscounts: { value: 0, currency: config.currency },
+                totalShipping: { value: 0, currency: config.currency },
+                totalTax: { value: 0, currency: config.currency }
+            }
+        };
+
+        if (!wasSetup) {
+            const onApproved = function(application) {};
+            const onCheckout = function(application) {};
+
+            sdk.setup({ integrationKey: config.integrationKey });
+            sdk.on('INSTALLMENT:APPLICATION_DECISIONED', onApproved);
+            sdk.on('INSTALLMENT:APPLICATION_CHECKOUT', onCheckout);
+
+            sdk.registerPlacements([placement]);
+            sdk.setInitMode('manual');
+            sdk.init();
+            wasSetup = true;
+        } else {
+            sdk.registerPlacements([placement]);
+        }
+    }
+
+    initBread();
+})();
+</script>

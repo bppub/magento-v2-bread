@@ -23,4 +23,10 @@
             <argument name="payment" xsi:type="object">Bread\BreadCheckout\Model\Payment\Method\BreadPaymentMethodFactory</argument>
         </arguments>
     </type>
+
+    <type name="Bread\BreadCheckout\Block\Hyva\Checkout\Payment\Method\BreadCheckout">
+        <arguments>
+            <argument name="checkoutSession" xsi:type="object">Magento\Checkout\Model\Session\Proxy</argument>
+        </arguments>
+    </type>
 </config>

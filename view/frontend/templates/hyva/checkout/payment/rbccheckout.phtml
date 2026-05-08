@@ -1,0 +1,182 @@
+<?php
+/**
+ * Bread BreadCheckout Hyva - RBC Payment Method Template
+ *
+ * Uses existing ConfigProvider data from window.checkoutConfig.payment.rbccheckout
+ *
+ * @var \Magento\Framework\View\Element\Template $block
+ * @var \Magento\Framework\Escaper $escaper
+ */
+?>
+
+<div class="rbc-payment-method"
+     x-data="initRbcCheckoutPayment()"
+     x-init="init()"
+     x-show="isActive"
+     x-cloak>
+
+    <div class="flex items-start gap-3 p-4 border rounded-lg cursor-pointer hover:bg-gray-50"
+         :class="{ 'border-primary bg-primary-lighter': isSelected }"
+         @click="selectMethod()">
+        
+        <input type="radio"
+               name="payment[method]"
+               id="payment_rbccheckout"
+               value="rbccheckout"
+               :checked="isSelected"
+               class="mt-1"
+               @change="selectMethod()">
+        
+        <label for="payment_rbccheckout" class="flex-1 cursor-pointer">
+            <span class="font-medium text-gray-900" x-text="title"></span>
+            <p class="text-sm text-gray-600 mt-1">
+                <?= $escaper->escapeHtml(__('Pay over time with RBC PayPlan')) ?>
+            </p>
+        </label>
+    </div>
+
+    <div x-show="isSelected" x-cloak class="mt-4 p-4 bg-gray-50 rounded-lg">
+        <template x-if="isLoading">
+            <div class="flex items-center justify-center py-8">
+                <svg class="animate-spin h-8 w-8 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span class="ml-3 text-gray-600"><?= $escaper->escapeHtml(__('Loading payment options...')) ?></span>
+            </div>
+        </template>
+
+        <div x-show="!isLoading" class="rbc-checkout-btn-container">
+            <div id="rbc-checkout-btn-payment" class="rbc-checkout-btn"></div>
+            
+            <input type="hidden" 
+                   name="payment[bread_transaction_id]" 
+                   x-model="transactionId">
+            
+            <template x-if="transactionId">
+                <div class="mt-4 p-3 bg-green-100 text-green-800 rounded-lg flex items-center">
+                    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                    </svg>
+                    <?= $escaper->escapeHtml(__('Payment authorized. You can now place your order.')) ?>
+                </div>
+            </template>
+
+            <template x-if="errorMessage">
+                <div class="mt-4 p-3 bg-red-100 text-red-800 rounded-lg" x-text="errorMessage"></div>
+            </template>
+        </div>
+    </div>
+</div>
+
+<script>
+function initRbcCheckoutPayment() {
+    return {
+        isActive: false,
+        isSelected: false,
+        isLoading: false,
+        transactionId: '',
+        errorMessage: '',
+        wasSetup: false,
+        title: '',
+        config: {},
+        
+        init() {
+            const paymentConfig = window.checkoutConfig?.payment?.rbccheckout;
+            if (!paymentConfig || !paymentConfig.active) {
+                this.isActive = false;
+                return;
+            }
+            
+            this.isActive = true;
+            this.config = paymentConfig;
+            this.title = paymentConfig.breadConfig?.methodTitle || 'RBC PayPlan';
+            this.transactionId = paymentConfig.transactionId || '';
+            
+        },
+        
+        selectMethod() {
+            this.isSelected = true;
+            if (!this.wasSetup) {
+                this.setupRbcButton();
+            }
+        },
+        
+        async setupRbcButton() {
+            this.isLoading = true;
+            
+            try {
+                const integrationKey = this.config.integrationKey;
+                
+                // Wait for RBC SDK to load
+                const rbcSdk = await new Promise((resolve) => {
+                    const check = () => {
+                        if (window.RBCPayPlan) resolve(window.RBCPayPlan);
+                        else setTimeout(check, 100);
+                    };
+                    check();
+                });
+                
+                if (!this.wasSetup) {
+                    rbcSdk.setup({ integrationKey: integrationKey });
+                    
+                    rbcSdk.on('INSTALLMENT:APPLICATION_DECISIONED', (app) => {
+                        if (app?.transactionId) this.transactionId = app.transactionId;
+                    });
+                    
+                    rbcSdk.on('INSTALLMENT:APPLICATION_CHECKOUT', (app) => {
+                        if (app?.transactionId) this.transactionId = app.transactionId;
+                    });
+                    
+                    this.wasSetup = true;
+                }
+                
+                const breadConfig = this.config.breadConfig || {};
+                const items = breadConfig.items || [];
+                const currency = breadConfig.currencyCode || 'USD';
+                
+                let total = 0;
+                const itemsObj = items.map(item => {
+                    total += item.price * item.quantity;
+                    return {
+                        name: item.name,
+                        quantity: item.quantity,
+                        unitPrice: { value: item.price, currency: currency },
+                        itemUrl: item.detailUrl || '',
+                        shippingCost: { value: 0, currency: currency },
+                        unitTax: { value: 0, currency: currency }
+                    };
+                });
+                
+                rbcSdk.registerPlacements([{
+                    allowCheckout: true,
+                    domID: 'rbc-checkout-btn-payment',
+                    order: {
+                        currency: currency,
+                        items: itemsObj,
+                        subTotal: { value: total, currency: currency },
+                        totalPrice: { value: total, currency: currency },
+                        totalDiscounts: { value: 0, currency: currency },
+                        totalShipping: { value: 0, currency: currency },
+                        totalTax: { value: 0, currency: currency }
+                    }
+                }]);
+                
+                rbcSdk.setInitMode('manual');
+                rbcSdk.init();
+                
+            } catch (error) {
+                console.error('RBC SDK setup failed:', error);
+                this.errorMessage = 'Unable to load payment options. Please try again.';
+            }
+            
+            this.isLoading = false;
+        }
+    };
+}
+</script>
+
+<style>
+    [x-cloak] { display: none !important; }
+    .rbc-checkout-btn { min-height: 50px; }
+</style>

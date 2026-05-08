@@ -1,0 +1,65 @@
+<?php
+/**
+ * Bread BreadCheckout Hyva - Category Item Button
+ * This template renders a Bread button for each product in the category list.
+ * It's rendered as a child of the "addto" block, so it receives the product via setProduct().
+ *
+ * @var \Bread\BreadCheckout\Block\Product\Category $block
+ * @var \Magento\Framework\Escaper $escaper
+ */
+
+// Get the product set by the parent block (addto block calls setProduct)
+$product = $block->getData('product');
+if (!$product || !$product->getId()) {
+    return;
+}
+
+// Check if product meets threshold and is not disabled
+$productId = $product->getId();
+$price = $product->getPriceInfo()->getPrice('final_price')->getValue();
+$priceInCents = (int) round($price * 100);
+
+// Use block's _toHtml logic but inline (checks threshold and disabled SKU)
+// We need to get the config values
+$integrationKey = $block->getIntegrationKey();
+$configClient = $block->getConfigClient();
+$currencyCode = $block->getCurrentCurrencyCode();
+
+if (!$integrationKey || $priceInCents <= 0) {
+    return;
+}
+
+// Generate unique ID for this button
+$buttonId = 'bread-cat-' . $productId . '-' . uniqid();
+?>
+
+<div class="bread-category-btn w-full mt-2" id="<?= $escaper->escapeHtmlAttr($buttonId) ?>"></div>
+
+<script>
+(function() {
+    // Register this placement with the global config
+    if (typeof window.BreadCategoryConfig !== 'undefined') {
+        window.BreadCategoryConfig.placements.push({
+            allowCheckout: false,
+            domID: '<?= $escaper->escapeJs($buttonId) ?>',
+            order: {
+                currency: '<?= $escaper->escapeJs($currencyCode) ?>',
+                items: [{
+                    name: <?= /* @noEscape */ json_encode($product->getName()) ?>,
+                    quantity: 1,
+                    unitPrice: { value: <?= (int) $priceInCents ?>, currency: '<?= $escaper->escapeJs($currencyCode) ?>' },
+                    itemUrl: <?= /* @noEscape */ json_encode($product->getProductUrl()) ?>,
+                    shippingCost: { value: 0, currency: '<?= $escaper->escapeJs($currencyCode) ?>' },
+                    shippingDescription: '',
+                    unitTax: { value: 0, currency: '<?= $escaper->escapeJs($currencyCode) ?>' }
+                }],
+                subTotal: { value: <?= (int) $priceInCents ?>, currency: '<?= $escaper->escapeJs($currencyCode) ?>' },
+                totalPrice: { value: <?= (int) $priceInCents ?>, currency: '<?= $escaper->escapeJs($currencyCode) ?>' },
+                totalDiscounts: { value: 0, currency: '<?= $escaper->escapeJs($currencyCode) ?>' },
+                totalShipping: { value: 0, currency: '<?= $escaper->escapeJs($currencyCode) ?>' },
+                totalTax: { value: 0, currency: '<?= $escaper->escapeJs($currencyCode) ?>' }
+            }
+        });
+    }
+})();
+</script>

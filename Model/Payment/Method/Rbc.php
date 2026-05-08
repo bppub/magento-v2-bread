@@ -694,10 +694,10 @@ class Rbc extends \Magento\Payment\Model\Method\AbstractMethod
     /**
      * Is the 'rbccheckout' payment method available
      *
-     * @param  \Magento\Quote\Api\Data\CartInterface $quote
+     * @param  \Magento\Quote\Api\Data\CartInterface|null $quote
      * @return bool
      */
-    public function isAvailable(\Magento\Quote\Api\Data\CartInterface $quote = null)
+    public function isAvailable(?\Magento\Quote\Api\Data\CartInterface $quote = null): bool
     {
         if ($this->helper->getConfigClient() !== 'RBC') {
             return false;
@@ -727,16 +727,25 @@ class Rbc extends \Magento\Payment\Model\Method\AbstractMethod
     }
 
     /**
-     * Get Bread transaction ID saved in session
+     * Get Bread transaction ID saved in session or payment additional info
      *
-     * @return string
+     * @return string|null
      */
     protected function getToken()
     {
         if ($this->helper->isInAdmin()) {
             $token = $this->orderCreateModel->getSession()->getBreadTransactionId();
         } else {
+            // First try the checkout session (standard Magento checkout)
             $token = $this->checkoutSession->getBreadTransactionId();
+            
+            // If not found, check quote payment additional info (Hyva Checkout)
+            if (empty($token)) {
+                $quote = $this->checkoutSession->getQuote();
+                if ($quote && $quote->getPayment()) {
+                    $token = $quote->getPayment()->getAdditionalInformation('bread_transaction_id');
+                }
+            }
         }
 
         return $token;

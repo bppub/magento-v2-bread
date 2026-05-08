@@ -80,21 +80,9 @@ class Js extends \Magento\Framework\View\Element\Text
         $moduleVersionComment = sprintf('<!-- BreadCheckout Module Version: %s -->', $this->getModuleVersion());
 
         $breadJsScript = sprintf(
-            '<script data-api-key="%s">
-                const script = document.createElement("script");
-                script.async = false;
-                script.onload = () => {
-                    if (BreadPayments) {
-                        BreadPayments.setInitMode("manual");
-                    } else {
-                     RBCPayPlan.setInitMode("manual");
-                    }
-                };
-                script.src = "%s";
-                document.head.appendChild(script);
-            </script>',
-            $this->getPublicApiKey(),
-            $this->getJsLibLocation()
+            '<script src="%s" data-api-key="%s"></script>',
+            $this->getJsLibLocation(),
+            $this->getPublicApiKey()
         );
 
         return $moduleVersionComment . $breadJsScript;

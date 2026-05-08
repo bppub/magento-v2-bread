@@ -8,7 +8,11 @@
  */
 namespace Bread\BreadCheckout\Controller\Checkout;
 
-class ValidateTotals extends \Bread\BreadCheckout\Controller\Checkout
+use Magento\Framework\App\CsrfAwareActionInterface;
+use Magento\Framework\App\Request\InvalidRequestException;
+use Magento\Framework\App\RequestInterface;
+
+class ValidateTotals extends \Bread\BreadCheckout\Controller\Checkout implements CsrfAwareActionInterface
 {
     /**
      * @var \Magento\Framework\Json\EncoderInterface
@@ -47,6 +51,22 @@ class ValidateTotals extends \Bread\BreadCheckout\Controller\Checkout
             $customerSession,
             $quoteManagement
         );
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function createCsrfValidationException(RequestInterface $request): ?InvalidRequestException
+    {
+        return null;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function validateForCsrf(RequestInterface $request): ?bool
+    {
+        return true;
     }
 
     /**

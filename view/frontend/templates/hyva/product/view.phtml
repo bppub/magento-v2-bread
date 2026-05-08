@@ -1,0 +1,78 @@
+<?php
+/**
+ * Bread BreadCheckout Hyva - Product View Button Template
+ *
+ * @var \Bread\BreadCheckout\Block\Product\View $block
+ * @var \Magento\Framework\Escaper $escaper
+ */
+
+// Check if enabled on PDP
+if (!$block->catalogHelper->isEnabledOnPDP()) {
+    return;
+}
+
+$product = $block->getProduct();
+if (!$product) {
+    return;
+}
+
+$integrationKey = $block->getIntegrationKey();
+$configClient = $block->getConfigClient();
+$currencyCode = $block->getCurrentCurrencyCode();
+$productData = json_decode($block->getProductDataJson(), true);
+$productItem = $productData[0] ?? [];
+$buttonDesign = $block->getButtonDesign();
+$isDefaultSize = $block->getIsDefaultSize();
+
+$sdk = $configClient === 'RBC' ? 'RBCPayPlan' : 'BreadPayments';
+$price = (int)($productItem['price'] ?? 0);
+?>
+
+<div id="bread-btn-cntnr" class="bread-checkout-container my-4">
+    <div id="bread-checkout-btn"
+         class="bread-checkout-btn"
+         <?= /* @noEscape */ $isDefaultSize ?>
+         <?php if ($buttonDesign): ?>
+         style="<?= $escaper->escapeHtmlAttr($buttonDesign) ?>"
+         <?php endif; ?>>
+    </div>
+</div>
+
+<script>
+(function() {
+    const config = {
+        sdkName: '<?= $escaper->escapeJs($sdk) ?>',
+        integrationKey: '<?= $escaper->escapeJs($integrationKey) ?>',
+        currency: '<?= $escaper->escapeJs($currencyCode) ?>'
+    };
+
+    function initBread() {
+        if (!window.BreadSDKHelper) {
+            setTimeout(initBread, 100);
+            return;
+        }
+
+        const item = BreadSDKHelper.createItem({
+            name: '<?= $escaper->escapeJs($product->getName()) ?>',
+            price: <?= (int) $price ?>,
+            url: '<?= $escaper->escapeJs($product->getProductUrl()) ?>',
+            currency: config.currency
+        });
+
+        const placement = BreadSDKHelper.createPlacement({
+            domID: 'bread-checkout-btn',
+            currency: config.currency,
+            items: [item],
+            totalPrice: <?= (int) $price ?>
+        });
+
+        BreadSDKHelper.init(config, [placement]);
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initBread);
+    } else {
+        initBread();
+    }
+})();
+</script>

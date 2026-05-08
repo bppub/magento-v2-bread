@@ -59,7 +59,7 @@ Installation
 ## Usage instructions:
 
 ### For US Merchants
-See documentation at https://docs.breadpayments.com/bread-classic/docs/magento-2-integration-steps
+See documentation at https://platform-docs.breadpayments.com/bread-onboarding/docs/magento-2-integration-steps
 Contact your Bread Pay representative for login credentials.
 
 ### For Canada Merchants

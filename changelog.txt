@@ -1,7 +1,16 @@
 == Changelog ==
 
-= 2.4.6
+= 2.4.8
 * Current release
+* Add Hyva theme and Hyva Checkout compatibility
+* Add CSP (Content Security Policy) whitelist for Bread SDK domains
+* Fix SDK loading for stores with strict CSP policies
+* Fix PHP 8.4 implicit nullable parameter deprecations
+
+= 2.4.7
+* Support PHP 8.4
+
+= 2.4.6
 * Support PHP 8.3
 
 = 2.4.5
@@ -15,11 +24,9 @@
 * Fix checkout issue with RBC
 
 = 2.4.2
-* Current release
 * Allow Submit Order in admin when creating customer cart
 
 = 2.4.1
-* Current release
 * Add support for CAD and USD on the same store using currency switcher
 
 = 2.3.11

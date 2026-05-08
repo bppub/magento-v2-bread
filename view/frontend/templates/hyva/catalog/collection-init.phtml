@@ -1,0 +1,86 @@
+<?php
+/**
+ * Bread BreadCheckout Hyva - Category Collection SDK Initialization
+ * This template initializes the SDK once per page. Individual product buttons are rendered via item-button.phtml
+ *
+ * @var \Bread\BreadCheckout\Block\Catalog\ProductCollection $block
+ * @var \Magento\Framework\Escaper $escaper
+ */
+
+// Check if enabled on category page
+if (!$block->isEnabledOnCAT()) {
+    return;
+}
+
+$integrationKey = $block->getIntegrationKey();
+$configClient = $block->getConfigClient();
+$currencyCode = $block->getCurrentCurrencyCode();
+
+if (!$integrationKey) {
+    return;
+}
+
+$sdk = $configClient === 'RBC' ? 'RBCPayPlan' : 'BreadPayments';
+?>
+
+<script>
+window.BreadCategoryConfig = {
+    integrationKey: '<?= $escaper->escapeJs($integrationKey) ?>',
+    sdk: '<?= $escaper->escapeJs($sdk) ?>',
+    currency: '<?= $escaper->escapeJs($currencyCode) ?>',
+    placements: [],
+    initialized: false
+};
+
+(function() {
+    let initAttempts = 0;
+    const maxAttempts = 50;
+
+    function initBreadCategory() {
+        initAttempts++;
+        const config = window.BreadCategoryConfig;
+        const sdk = window[config.sdk];
+
+        if (!sdk) {
+            if (initAttempts < maxAttempts) {
+                setTimeout(initBreadCategory, 100);
+            }
+            return;
+        }
+
+        if (config.initialized) {
+            // Already initialized, just register any new placements
+            if (config.placements.length > 0) {
+                sdk.registerPlacements(config.placements);
+                config.placements = [];
+            }
+            return;
+        }
+
+        // Wait for placements to be collected
+        if (config.placements.length === 0) {
+            setTimeout(initBreadCategory, 100);
+            return;
+        }
+
+        sdk.setup({ integrationKey: config.integrationKey });
+        sdk.on('INSTALLMENT:APPLICATION_DECISIONED', function(application) {});
+        sdk.on('INSTALLMENT:APPLICATION_CHECKOUT', function(application) {});
+        sdk.registerPlacements(config.placements);
+        sdk.setInitMode('manual');
+        sdk.init();
+
+        config.initialized = true;
+        config.placements = [];
+    }
+
+    // Start initialization after DOM is ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(initBreadCategory, 100);
+        });
+    } else {
+        setTimeout(initBreadCategory, 100);
+    }
+})();
+</script>

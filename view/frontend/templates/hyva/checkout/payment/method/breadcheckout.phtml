@@ -1,0 +1,64 @@
+<?php
+/**
+ * Bread BreadCheckout - Hyva Checkout Payment Method Template
+ *
+ * @var \Bread\BreadCheckout\Block\Hyva\Checkout\Payment\Method\BreadCheckout $block
+ * @var \Magento\Framework\Escaper $escaper
+ */
+
+if (!$block->isAvailable()) {
+    return;
+}
+
+$integrationKey = $block->getIntegrationKey();
+$sdkName = $block->getSdkName();
+$jsLocation = $block->getJsLocation();
+$currencyCode = $block->getCurrencyCode();
+$checkoutData = $block->getCheckoutData();
+$billingContact = $block->getBillingContact();
+$shippingContact = $block->getShippingContact();
+$transactionId = $block->getTransactionId();
+$isApproved = $block->isApproved();
+$paymentUrl = $block->getPaymentUrl();
+$validateTotalsUrl = $block->getValidateTotalsUrl();
+
+$breadConfig = [
+    'integrationKey' => $integrationKey,
+    'sdkName' => $sdkName,
+    'jsLocation' => $jsLocation,
+    'currency' => $currencyCode,
+    'checkoutData' => $checkoutData,
+    'billingContact' => $billingContact,
+    'shippingContact' => $shippingContact,
+    'transactionId' => $transactionId,
+    'isApproved' => $isApproved,
+    'paymentUrl' => $paymentUrl,
+    'validateTotalsUrl' => $validateTotalsUrl
+];
+?>
+<div id="bread-payment-container"
+     data-bread-config="<?= $escaper->escapeHtmlAttr(json_encode($breadConfig)) ?>"
+     class="bread-payment-method">
+    <div id="bread-approved-message" 
+         class="mb-4 p-3 bg-green-100 text-green-800 rounded-md items-center gap-2"
+         style="display: <?= $isApproved ? 'flex' : 'none' ?>;">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <span><?= $escaper->escapeHtml(__('Financing approved! Your order will be placed.')) ?></span>
+    </div>
+
+    <div id="bread-button-container" 
+         class="bread-info-container text-sm text-gray-600"
+         style="display: <?= $isApproved ? 'none' : 'block' ?>;">
+        <p><?= $escaper->escapeHtml(__('Click "Place Order" to complete your Bread financing application.')) ?></p>
+    </div>
+
+    <div id="bread-checkout-btn-hyva" style="display: none;"></div>
+
+    <!-- Hidden input for transaction ID -->
+    <input type="hidden" 
+           id="bread-transaction-id-input"
+           name="payment[bread_transaction_id]" 
+           value="<?= $escaper->escapeHtmlAttr($transactionId ?? '') ?>" />
+</div>

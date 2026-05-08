@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Bread BreadCheckout - Hyva Category View Layout
+ * Overrides templates for Hyva theme compatibility
+ */
+-->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <referenceBlock name="breadcheckout.catalog.prod.collection" template="Bread_BreadCheckout::hyva/catalog/collection.phtml"/>
+    </body>
+</page>

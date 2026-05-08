@@ -1,0 +1,92 @@
+<?php
+/**
+ * Bread BreadCheckout Hyva - Cart View Button Template
+ *
+ * @var \Bread\BreadCheckout\Block\Checkout\Overview $block
+ * @var \Magento\Framework\Escaper $escaper
+ */
+
+// Check if enabled on Cart page
+if (!$block->quoteHelper->isEnabledOnCOP()) {
+    return;
+}
+
+$integrationKey = $block->getIntegrationKey();
+$configClient = $block->getConfigClient();
+$currencyCode = $block->getCurrentCurrencyCode();
+$productData = json_decode($block->getProductDataJson(), true);
+$buttonDesign = $block->getButtonDesign();
+$isDefaultSize = $block->getIsDefaultSize();
+
+$sdk = $configClient === 'RBC' ? 'RBCPayPlan' : 'BreadPayments';
+?>
+
+<div id="bread-btn-cntnr" class="bread-checkout-cart-container mt-4 pt-4">
+    <div id="bread-checkout-btn"
+         class="bread-checkout-btn"
+         <?= /* @noEscape */ $isDefaultSize ?>
+         <?php if ($buttonDesign): ?>
+         style="<?= $escaper->escapeHtmlAttr($buttonDesign) ?>"
+         <?php endif; ?>>
+    </div>
+</div>
+
+<script>
+// Position Bread button after cart-totals (below Grand Total)
+(function() {
+    function positionBreadButton() {
+        const breadContainer = document.getElementById('bread-btn-cntnr');
+        const cartTotals = document.getElementById('cart-totals');
+        if (breadContainer && cartTotals && cartTotals.parentNode) {
+            cartTotals.parentNode.insertBefore(breadContainer, cartTotals.nextSibling);
+        }
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', positionBreadButton);
+    } else {
+        positionBreadButton();
+    }
+})();
+</script>
+
+<script>
+(function() {
+    const config = {
+        sdkName: '<?= $escaper->escapeJs($sdk) ?>',
+        integrationKey: '<?= $escaper->escapeJs($integrationKey) ?>',
+        currency: '<?= $escaper->escapeJs($currencyCode) ?>'
+    };
+
+    const cartItems = <?= /* @noEscape */ json_encode($productData) ?>;
+
+    function initBread() {
+        if (!window.BreadSDKHelper) {
+            setTimeout(initBread, 100);
+            return;
+        }
+
+        let total = 0;
+        const items = cartItems.map(function(item) {
+            total += item.price * item.quantity;
+            return BreadSDKHelper.createItem({
+                name: item.name,
+                quantity: item.quantity,
+                price: item.price,
+                url: item.detailUrl || '',
+                currency: config.currency
+            });
+        });
+
+        const placement = BreadSDKHelper.createPlacement({
+            domID: 'bread-checkout-btn',
+            currency: config.currency,
+            items: items,
+            totalPrice: total
+        });
+
+        BreadSDKHelper.init(config, [placement]);
+    }
+
+    initBread();
+})();
+</script>

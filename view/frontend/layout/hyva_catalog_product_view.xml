@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Bread BreadCheckout - Hyva Product View Layout
+ * Overrides templates for Hyva theme compatibility
+ */
+-->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <referenceBlock name="breadcheckout.prod.view" remove="true"/>
+        <referenceContainer name="addtocart.shortcut.buttons">
+            <block class="Bread\BreadCheckout\Block\Product\View" 
+                   name="breadcheckout.prod.view.hyva" 
+                   template="Bread_BreadCheckout::hyva/product/view.phtml"
+                   before="-"/>
+        </referenceContainer>
+        <referenceBlock name="breadcheckout.prod.price" template="Bread_BreadCheckout::hyva/product/splitpay.phtml"/>
+    </body>
+</page>

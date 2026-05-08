@@ -17,7 +17,7 @@ if($version === 'bread_2') {
 <?php if($method == ConfigProvider::CODE && $version != "") : ?>
 <div class="admin__page-section-item-content">
     <hr>
-    <strong><?php echo __('Bread gateway version: ') ?></strong>
-    <span class="price"><?= $version; ?></span>                        
+    <strong><?= $escaper->escapeHtml(__('Bread gateway version: ')) ?></strong>
+    <span class="price"><?= $escaper->escapeHtml($version) ?></span>                        
 </div>
 <?php endif; ?>

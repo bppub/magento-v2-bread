@@ -1,0 +1,17 @@
+<?php
+/**
+ * Bread BreadCheckout Hyva - SplitPay Price Label Template
+ *
+ * The Bread SDK renders the SplitPay label automatically when registerPlacements is called.
+ *
+ * @var \Bread\BreadCheckout\Block\Product\View $block
+ * @var \Magento\Framework\Escaper $escaper
+ */
+
+$product = $block->getProduct();
+if (!$product) {
+    return;
+}
+?>
+
+<div id="bread-btn-render" class="bread-splitpay-render"></div>

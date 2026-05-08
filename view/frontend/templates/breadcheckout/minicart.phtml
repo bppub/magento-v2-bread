@@ -10,6 +10,9 @@
 
 <script type="text/javascript">
     <?php if ($block->getApiVersion() === 'bread_2') : ?>
+    if (typeof require === 'undefined') {
+        // skip if RequireJS is not available (Hyva theme)
+    } else {
     require(['jquery'], function($) {
         let wasSetup = false;
         document.configureButton = function (items) {
@@ -85,7 +88,8 @@
             var minicartItems       = <?= /* @noEscape */ $block->getProductDataJson(); ?>;
             document.configureButton(minicartItems);
         });
-    });    
+    });
+    }
     //# sourceURL=bread-minicart.js
     <?php endif; ?>
 </script>

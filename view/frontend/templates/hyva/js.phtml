@@ -1,0 +1,22 @@
+<?php
+/**
+ * Bread BreadCheckout Hyva - JS Initialization Template
+ *
+ * @var \Bread\BreadCheckout\Block\Hyva\Js $block
+ * @var \Magento\Framework\Escaper $escaper
+ */
+
+if (!$block->isActive()) {
+    return;
+}
+
+$apiKey = $block->getPublicApiKey();
+$jsLocation = $block->getJsLibLocation();
+
+$sdkConfig = [
+    'apiKey' => $apiKey,
+    'jsLocation' => $jsLocation
+];
+?>
+
+<div data-bread-sdk-config="<?= $escaper->escapeHtmlAttr(json_encode($sdkConfig)) ?>" style="display:none;"></div>

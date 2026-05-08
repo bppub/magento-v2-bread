@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Bread BreadCheckout - Hyva Checkout Layout
+ * Registers Bread payment method with Hyva Checkout
+ */
+-->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <head>
+        <script src="Bread_BreadCheckout::js/hyva/checkout-payment.js"/>
+    </head>
+    <body>
+        <referenceBlock name="checkout.payment.methods">
+            <block class="Bread\BreadCheckout\Block\Hyva\Checkout\Payment\Method\BreadCheckout"
+                   name="checkout.payment.method.breadcheckout"
+                   as="breadcheckout"
+                   template="Bread_BreadCheckout::hyva/checkout/payment/method/breadcheckout.phtml" />
+        </referenceBlock>
+    </body>
+</page>

@@ -1,0 +1,124 @@
+<?php
+/**
+ * Bread BreadCheckout Hyva - Category Collection Template
+ *
+ * @var \Bread\BreadCheckout\Block\Catalog\ProductCollection $block
+ * @var \Magento\Framework\Escaper $escaper
+ */
+
+if (!$block->isEnabledOnCAT()) {
+    return;
+}
+
+$integrationKey = $block->getIntegrationKey();
+$configClient = $block->getConfigClient();
+$currencyCode = $block->getCurrentCurrencyCode();
+$sdk = $configClient === 'RBC' ? 'RBCPayPlan' : 'BreadPayments';
+?>
+
+<script>
+(function() {
+    const config = {
+        sdkName: '<?= $escaper->escapeJs($sdk) ?>',
+        integrationKey: '<?= $escaper->escapeJs($integrationKey) ?>',
+        currency: '<?= $escaper->escapeJs($currencyCode) ?>'
+    };
+
+    function initBread() {
+        if (!window.BreadSDKHelper) {
+            setTimeout(initBread, 100);
+            return;
+        }
+
+        BreadSDKHelper.waitForSdk(config.sdkName)
+            .then(function(sdk) {
+                const productCards = document.querySelectorAll('li.product-item, .product-item, article[class*="product"]');
+                const placements = [];
+
+                productCards.forEach(function(item, index) {
+                    if (item.dataset.breadProcessed) return;
+                    item.dataset.breadProcessed = 'true';
+
+                    let price = 0;
+                    let priceElement = item.querySelector('[data-price-amount]');
+                    if (priceElement) {
+                        price = parseFloat(priceElement.dataset.priceAmount) || 0;
+                    }
+                    if (!price) {
+                        priceElement = item.querySelector('.price-wrapper .price, .price-box .price, span.price');
+                        if (priceElement) {
+                            const priceText = priceElement.textContent.replace(/[^0-9.,]/g, '').replace(',', '.');
+                            price = parseFloat(priceText) || 0;
+                        }
+                    }
+
+                    const nameElement = item.querySelector('.product-item-link, .product-item-name a, a.product-item-photo + * a, h3 a, h2 a');
+                    const name = nameElement ? nameElement.textContent.trim() : 'Product ' + index;
+                    const url = nameElement ? nameElement.href : '';
+
+                    if (price <= 0) return;
+
+
+                    let buttonContainer = null;
+                    const containerSelectors = [
+                        '.mt-auto', '.product-item-actions', '.actions-primary',
+                        '.tocart-wrapper', 'form.addtocart', '.product-item-inner'
+                    ];
+                    for (const selector of containerSelectors) {
+                        buttonContainer = item.querySelector(selector);
+                        if (buttonContainer) break;
+                    }
+                    if (!buttonContainer) buttonContainer = item;
+
+                    const priceInCents = Math.round(price * 100);
+                    const containerId = 'bread-cat-' + index + '-' + Date.now();
+
+                    const breadContainer = document.createElement('div');
+                    breadContainer.className = 'bread-category-btn w-full mt-2';
+                    breadContainer.id = containerId;
+                    breadContainer.style.cssText = 'width: 100%; margin-top: 8px;';
+
+                    if (buttonContainer.parentNode && buttonContainer !== item) {
+                        buttonContainer.parentNode.insertBefore(breadContainer, buttonContainer.nextSibling);
+                    } else {
+                        buttonContainer.appendChild(breadContainer);
+                    }
+
+                    const productItem = BreadSDKHelper.createItem({
+                        name: name,
+                        price: priceInCents,
+                        url: url,
+                        currency: config.currency
+                    });
+
+                    placements.push(BreadSDKHelper.createPlacement({
+                        domID: containerId,
+                        currency: config.currency,
+                        items: [productItem],
+                        totalPrice: priceInCents
+                    }));
+                });
+
+                if (placements.length) {
+                    BreadSDKHelper.setupSdk(sdk, config.integrationKey);
+                    BreadSDKHelper.registerAndInit(sdk, placements);
+                }
+            })
+            .catch(function(err) {
+                console.warn('[Bread]', err.message);
+            });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(initBread, 200);
+        });
+    } else {
+        setTimeout(initBread, 200);
+    }
+
+    window.addEventListener('alpine:initialized', function() {
+        setTimeout(initBread, 100);
+    });
+})();
+</script>

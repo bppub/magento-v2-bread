@@ -59,17 +59,17 @@ class Catalog extends Data
      * Get Formatted Product Data Array
      *
      * @param  \Magento\Catalog\Model\Product $product
-     * @param  \Magento\Catalog\Model\Product $baseProduct
+     * @param  \Magento\Catalog\Model\Product|null $baseProduct
      * @param  int                            $qty
-     * @param  null                           $lineItemPrice
+     * @param  float|null                     $lineItemPrice
      * @return array
      */
     public function getProductDataArray(
         \Magento\Catalog\Model\Product $product,
-        \Magento\Catalog\Model\Product $baseProduct = null,
-        $qty = 1,
-        $lineItemPrice = null
-    ) {
+        ?\Magento\Catalog\Model\Product $baseProduct = null,
+        int $qty = 1,
+        ?float $lineItemPrice = null
+    ): array {
     
         $theProduct     = ($baseProduct == null) ? $product : $baseProduct;
         $skuString      = $this->getSkuString($product, $theProduct);

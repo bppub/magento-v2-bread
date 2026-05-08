@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Bread BreadCheckout - Hyva Cart Layout
+ * Overrides templates for Hyva theme compatibility
+ */
+-->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <referenceBlock name="breadcheckout.checkout.view" remove="true"/>
+        
+        <referenceBlock name="cart.summary">
+            <block class="Bread\BreadCheckout\Block\Checkout\Overview" 
+                   name="breadcheckout.checkout.view.hyva" 
+                   template="Bread_BreadCheckout::hyva/cart/view.phtml"/>
+        </referenceBlock>
+    </body>
+</page>

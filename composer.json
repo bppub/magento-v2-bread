@@ -3,9 +3,13 @@
     "description": "Offers Bread Pay financing and checkout tools for your Magento store",
     "license": "MIT",
     "minimum-stability": "stable",
-    "version": "2.4.6",
+    "version": "2.4.8",
     "require": {
-        "php": "~8.1.0||~8.2.0||~8.3.0"
+        "php": "~8.1.0||~8.2.0||~8.3.0||~8.4.0"
+    },
+    "suggest": {
+        "hyva-themes/magento2-default-theme": "Required for Hyva theme compatibility",
+        "hyva-themes/magento2-hyva-checkout": "Required for Hyva Checkout integration"
     },
     "type": "magento2-module",
     "repositories": [{
@@ -16,6 +20,9 @@
         "files": ["registration.php"],
         "psr-4": {
             "Bread\\BreadCheckout\\": ""
-        }
+        },
+        "exclude-from-classmap": [
+            "Magewire/"
+        ]
     }
 }
