@@ -90,9 +90,4 @@ class CopyApiCredentials implements DataPatchInterface
     {
         return [];
     }
-
-    public static function getVersion()
-    {
-        return '2.3.0';
-    }
 }
