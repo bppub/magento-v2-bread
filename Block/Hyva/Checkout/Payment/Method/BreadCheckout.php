@@ -110,6 +110,16 @@ class BreadCheckout extends Template
     }
 
     /**
+     * Get config data URL for fetching current shipping/billing from quote
+     *
+     * @return string
+     */
+    public function getConfigDataUrl(): string
+    {
+        return (string) $this->breadHelper->getConfigDataUrl();
+    }
+
+    /**
      * Get checkout data for SDK
      *
      * @return array

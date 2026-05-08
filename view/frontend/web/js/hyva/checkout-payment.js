@@ -46,6 +46,7 @@
 
             this.waitForSdk();
             this.hookIntoHyvaCheckout();
+            this.watchForPaymentMethodSelection();
         },
 
         watchForContainer: function() {
@@ -369,6 +370,70 @@
                     this.pendingReject(e);
                 }
             }
+        },
+
+        /**
+         * Watch for bread payment method selection and refresh shipping contact from server
+         */
+        watchForPaymentMethodSelection: function() {
+            var self = this;
+
+            document.addEventListener('change', function(e) {
+                if (e.target.matches('input[name="payment-method-option"][value="breadcheckout"]')) {
+                    log('Bread payment method selected via radio');
+                    self.refreshShippingContact();
+                }
+            });
+        },
+
+        refreshShippingContact: function() {
+            var configDataUrl = this.config.configDataUrl;
+            if (!configDataUrl) {
+                log('No configDataUrl configured, skipping refresh');
+                return;
+            }
+
+            var self = this;
+            log('Refreshing shipping contact from server:', configDataUrl);
+
+            fetch(configDataUrl, {
+                method: 'GET',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
+                log('Server config data response:', data);
+                var sc = data.shippingContact;
+                if (!sc || !sc.address) return;
+
+                var firstName = '';
+                var lastName = '';
+                // server returns fullName, split it into first and last name
+                if (sc.fullName) {
+                    var parts = sc.fullName.trim().split(/\s+/);
+                    firstName = parts[0] || '';
+                    lastName = parts.slice(1).join(' ') || '';
+                }
+
+                self.config.shippingContact = {
+                    firstName: firstName,
+                    lastName: lastName,
+                    email: sc.email || '',
+                    phone: sc.phone || '',
+                    address: {
+                        address1: sc.address || '',
+                        address2: sc.address2 || '',
+                        locality: sc.city || '',
+                        region: sc.state || '',
+                        postalCode: sc.zip || '',
+                        country: sc.country || 'US'
+                    }
+                };
+                log('Shipping contact updated:', self.config.shippingContact);
+            })
+            .catch(function(error) {
+                logError('Failed to refresh shipping contact:', error);
+            });
         },
 
         handleModalClose: function() {

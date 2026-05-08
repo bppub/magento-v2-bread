@@ -21,6 +21,7 @@ $transactionId = $block->getTransactionId();
 $isApproved = $block->isApproved();
 $paymentUrl = $block->getPaymentUrl();
 $validateTotalsUrl = $block->getValidateTotalsUrl();
+$configDataUrl = $block->getConfigDataUrl();
 
 $breadConfig = [
     'integrationKey' => $integrationKey,
@@ -33,7 +34,8 @@ $breadConfig = [
     'transactionId' => $transactionId,
     'isApproved' => $isApproved,
     'paymentUrl' => $paymentUrl,
-    'validateTotalsUrl' => $validateTotalsUrl
+    'validateTotalsUrl' => $validateTotalsUrl,
+    'configDataUrl' => $configDataUrl
 ];
 ?>
 <div id="bread-payment-container"
