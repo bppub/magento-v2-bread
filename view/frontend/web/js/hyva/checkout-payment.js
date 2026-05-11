@@ -193,6 +193,7 @@
         },
 
         getShippingAddressFromCheckout: function() {
+            // Try to get from Hyva checkout state first, then Alpine.js data, then DOM inputs, then fallback to config
             var result;
             if (typeof hyvaCheckout !== 'undefined' && hyvaCheckout.shipping) {
                 var shippingData = hyvaCheckout.shipping.getAddress ? hyvaCheckout.shipping.getAddress() : null;
@@ -315,12 +316,12 @@
                 log('Local shipping address invalid, fetching from server...');
                 this.refreshShippingContact().then(function() {
                     var refreshedContact = self.config.shippingContact;
-                    log('Refreshed shipping contact from server:', refreshedContact);
+                    log('Refreshed shipping contact from server: ', refreshedContact);
                     if (self.validateShippingAddress(refreshedContact)) {
                         self.showBreadModal(refreshedContact);
                     } else {
-                        logError('Invalid shipping address after server refresh:', refreshedContact);
-                        alert('Please complete your shipping address before proceeding with Bread checkout.');
+                        logError('Invalid shipping address after server refresh: ', refreshedContact);
+                        alert('Please complete your shipping address before proceeding with Bread checkout');
                         if (self.pendingReject) {
                             self.pendingReject('Shipping address required');
                         }
