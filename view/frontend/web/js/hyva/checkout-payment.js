@@ -173,113 +173,118 @@
         },
 
         setupBreadSdk: function() {
-            if (this.sdkWasSetup) {
-                log('SDK already set up, skipping');
-                return;
-            }
-
-            var sdk = window[this.config.sdkName];
-            if (!sdk) {
-                logError('SDK not found:', this.config.sdkName);
-                return;
-            }
-
-            var self = this;
-
-            var shippingContact = this.config.shippingContact;
-            var shippingAddress = shippingContact && shippingContact.address ? {
-                address1: shippingContact.address.address1 || '',
-                address2: shippingContact.address.address2 || '',
-                country: shippingContact.address.country || 'US',
-                locality: shippingContact.address.locality || '',
-                region: shippingContact.address.region || '',
-                postalCode: shippingContact.address.postalCode || ''
-            } : null;
-
-            var setupConfig = {
-                integrationKey: this.config.integrationKey
-            };
-
-            if (shippingAddress && shippingAddress.address1) {
-                setupConfig.buyer = {
-                    shippingAddress: shippingAddress
-                };
-            }
-
-            log('SDK setup config:', setupConfig);
-            sdk.setup(setupConfig);
-            sdk.setInitMode('manual');
-            
-            if (sdk.__internal__ && sdk.__internal__.setAutoRender) {
-                sdk.__internal__.setAutoRender(false);
-            }
-            
-            sdk.on('INSTALLMENT:APPLICATION_DECISIONED', function(application) {
-                log('Application decisioned:', application);
-            });
-            sdk.on('INSTALLMENT:APPLICATION_CHECKOUT', function(application) {
-                log('Application checkout:', application);
-                if (application && application.transactionID) {
-                    self.handleCheckoutComplete(application.transactionID);
+            log('SDK loaded and available');
+        },
+        convertToContact: function(data, emailOverride) {
+            return {
+                firstName: data.firstname || '',
+                lastName: data.lastname || '',
+                email: emailOverride || data.email || '',
+                phone: data.telephone || '',
+                address: {
+                    address1: Array.isArray(data.street) ? data.street[0] : (data.street || ''),
+                    address2: Array.isArray(data.street) ? (data.street[1] || '') : '',
+                    locality: data.city || '',
+                    region: data.region_code || data.region || '',
+                    postalCode: data.postcode || '',
+                    country: data.country_id || 'US'
                 }
-            });
-            sdk.on('INSTALLMENT:CUSTOMER_CLOSE', function() {
-                log('Customer closed modal');
-                self.handleModalClose();
-            });
-
-            this.sdkWasSetup = false;
-            
-            log('SDK setup complete');
+            };
         },
 
         getShippingAddressFromCheckout: function() {
-            // Try to get from Hyva checkout state first
+            // Try to get from Hyva checkout state first, then Alpine.js data, then DOM inputs, then fallback to config
+            var result;
             if (typeof hyvaCheckout !== 'undefined' && hyvaCheckout.shipping) {
                 var shippingData = hyvaCheckout.shipping.getAddress ? hyvaCheckout.shipping.getAddress() : null;
                 if (shippingData && shippingData.street && shippingData.city) {
                     log('Got shipping from hyvaCheckout.shipping:', shippingData);
-                    return {
-                        firstName: shippingData.firstname || '',
-                        lastName: shippingData.lastname || '',
-                        email: shippingData.email || '',
-                        phone: shippingData.telephone || '',
-                        address: {
-                            address1: Array.isArray(shippingData.street) ? shippingData.street[0] : (shippingData.street || ''),
-                            address2: Array.isArray(shippingData.street) ? (shippingData.street[1] || '') : '',
-                            locality: shippingData.city || '',
-                            region: shippingData.region_code || shippingData.region || '',
-                            postalCode: shippingData.postcode || '',
-                            country: shippingData.country_id || 'US'
-                        }
-                    };
+                    return this.convertToContact(shippingData);
                 }
             }
 
-            // Try to get from Alpine.js component data
             var shippingForm = document.querySelector('[x-data*="shipping"]');
-            if (shippingForm && shippingForm.__x) {
-                var alpineData = shippingForm.__x.$data;
-                if (alpineData && alpineData.address) {
-                    log('Got shipping from Alpine component:', alpineData.address);
-                    var addr = alpineData.address;
-                    return {
-                        firstName: addr.firstname || '',
-                        lastName: addr.lastname || '',
-                        email: addr.email || '',
-                        phone: addr.telephone || '',
-                        address: {
-                            address1: Array.isArray(addr.street) ? addr.street[0] : (addr.street || ''),
-                            address2: Array.isArray(addr.street) ? (addr.street[1] || '') : '',
-                            locality: addr.city || '',
-                            region: addr.region_code || addr.region || '',
-                            postalCode: addr.postcode || '',
-                            country: addr.country_id || 'US'
-                        }
-                    };
+            if (shippingForm && shippingForm._x_dataStack) {
+                for (var i = 0; i < shippingForm._x_dataStack.length; i++) {
+                    var alpineData = shippingForm._x_dataStack[i];
+                    if (alpineData && alpineData.address && alpineData.address.city) {
+                        log('Got shipping from Alpine v3 _x_dataStack:', alpineData.address);
+                        return this.convertToContact(alpineData.address);
+                    }
+                    // some Hyva components store it flat
+                    if (alpineData && alpineData.firstname && alpineData.city) {
+                        log('Got shipping from Alpine v3 flat data:', alpineData);
+                        return this.convertToContact(alpineData);
+                    }
                 }
             }
+            if (shippingForm && shippingForm.__x) {
+                var alpineData = shippingForm.__x.$data;
+                if (alpineData && alpineData.address && alpineData.address.city) {
+                    log('Got shipping from Alpine v2 component:', alpineData.address);
+                    return this.convertToContact(alpineData.address);
+                }
+            }
+            result = this.getShippingAddressFromDOM();
+            if (result && this.validateShippingAddress(result)) {
+                log('Got shipping from DOM inputs:', result);
+                return result;
+            }
+
             return this.config.shippingContact || null;
+        },
+        getShippingAddressFromDOM: function() {
+            var email = '';
+            var emailInput = document.querySelector('input[name="email"], input[name="username"], input[type="email"], input[id*="email"]');
+            if (emailInput) {
+                email = emailInput.value || '';
+            }
+
+            // Try common Hyva checkout input selectors
+            var firstname = this.getInputValue('[name="firstname"], [name="shipping[firstname]"], [name="street_address[firstname]"]');
+            var lastname = this.getInputValue('[name="lastname"], [name="shipping[lastname]"], [name="street_address[lastname]"]');
+            var street1 = this.getInputValue('[name="street[0]"], [name="shipping[street][0]"], [name="street_address[street][0]"], [name="street[]"]:nth-of-type(1)');
+            var street2 = this.getInputValue('[name="street[1]"], [name="shipping[street][1]"], [name="street_address[street][1]"], [name="street[]"]:nth-of-type(2)');
+            var city = this.getInputValue('[name="city"], [name="shipping[city]"], [name="street_address[city]"]');
+            var region = this.getInputValue('[name="region"], [name="region_id"], [name="shipping[region]"], [name="shipping[region_id]"]');
+            var postcode = this.getInputValue('[name="postcode"], [name="shipping[postcode]"], [name="zipcode"], [name="street_address[postcode]"]');
+            var country = this.getInputValue('[name="country_id"], [name="shipping[country_id]"], [name="country"], [name="street_address[country_id]"]');
+            var telephone = this.getInputValue('[name="telephone"], [name="shipping[telephone]"], [name="phone"], [name="street_address[telephone]"]');
+
+            if (region && /^\d+$/.test(region)) {
+                var regionSelect = document.querySelector('select[name="region_id"], select[name="shipping[region_id]"]');
+                if (regionSelect && regionSelect.selectedOptions && regionSelect.selectedOptions[0]) {
+                    var regionText = regionSelect.selectedOptions[0].text;
+                    var regionCode = regionSelect.selectedOptions[0].getAttribute('data-code') || regionText;
+                    if (regionCode) {
+                        region = regionCode;
+                    }
+                }
+            }
+
+            if (!street1 && !city) {
+                return null;
+            }
+
+            return {
+                firstName: firstname,
+                lastName: lastname,
+                email: email,
+                phone: telephone,
+                address: {
+                    address1: street1,
+                    address2: street2,
+                    locality: city,
+                    region: region,
+                    postalCode: postcode,
+                    country: country || 'US'
+                }
+            };
+        },
+
+        getInputValue: function(selectors) {
+            var el = document.querySelector(selectors);
+            return el ? (el.value || '') : '';
         },
         validateShippingAddress: function(shippingContact) {
             if (!shippingContact || !shippingContact.address) {
@@ -306,6 +311,31 @@
             var self = this;
 
             var shippingContact = this.getShippingAddressFromCheckout();
+
+            if (!this.validateShippingAddress(shippingContact)) {
+                log('Local shipping address invalid, fetching from server...');
+                this.refreshShippingContact().then(function() {
+                    var refreshedContact = self.config.shippingContact;
+                    log('Refreshed shipping contact from server: ', refreshedContact);
+                    if (self.validateShippingAddress(refreshedContact)) {
+                        self.showBreadModal(refreshedContact);
+                    } else {
+                        logError('Invalid shipping address after server refresh: ', refreshedContact);
+                        alert('Please complete your shipping address before proceeding with Bread checkout');
+                        if (self.pendingReject) {
+                            self.pendingReject('Shipping address required');
+                        }
+                    }
+                });
+                return;
+            }
+
+            this.showBreadModal(shippingContact);
+        },
+
+        showBreadModal: function(shippingContact) {
+            var sdk = window[this.config.sdkName];
+            var self = this;
             var billingContact = this.config.billingContact;
 
             log('Opening checkout modal');
@@ -313,14 +343,24 @@
             log('Billing contact:', billingContact);
             log('Checkout data:', this.config.checkoutData);
 
-            if (!this.validateShippingAddress(shippingContact)) {
-                logError('Invalid shipping address:', shippingContact);
-                alert('Please complete your shipping address before proceeding with Bread checkout.');
-                if (this.pendingReject) {
-                    this.pendingReject('Shipping address required');
-                }
-                return;
+            var shippingAddress = shippingContact && shippingContact.address ? {
+                address1: shippingContact.address.address1 || '',
+                address2: shippingContact.address.address2 || '',
+                country: shippingContact.address.country || 'US',
+                locality: shippingContact.address.locality || '',
+                region: shippingContact.address.region || '',
+                postalCode: shippingContact.address.postalCode || ''
+            } : null;
+
+            var setupConfig = {
+                integrationKey: this.config.integrationKey
+            };
+            if (shippingAddress && shippingAddress.address1) {
+                setupConfig.buyer = {
+                    shippingAddress: shippingAddress
+                };
             }
+            sdk.setup(setupConfig);
 
             var checkoutData = this.config.checkoutData || {};
             var items = checkoutData.items || [];
@@ -355,12 +395,29 @@
             log('Registering placement and opening experience, sdkWasSetup:', this.sdkWasSetup);
             
             try {
-                sdk.registerPlacements([placementObject]);
-                
                 if (!this.sdkWasSetup) {
+                    sdk.setInitMode('manual');
+                    if (sdk.__internal__ && sdk.__internal__.setAutoRender) {
+                        sdk.__internal__.setAutoRender(false);
+                    }
+                    sdk.registerPlacements([placementObject]);
+                    sdk.on('INSTALLMENT:APPLICATION_DECISIONED', function(application) {
+                        log('Application decisioned:', application);
+                    });
+                    sdk.on('INSTALLMENT:APPLICATION_CHECKOUT', function(application) {
+                        log('Application checkout:', application);
+                        if (application && application.transactionID) {
+                            self.handleCheckoutComplete(application.transactionID);
+                        }
+                    });
+                    sdk.on('INSTALLMENT:CUSTOMER_CLOSE', function() {
+                        log('Customer closed modal');
+                        self.handleModalClose();
+                    });
                     sdk.init();
                     this.sdkWasSetup = true;
                 } else {
+                    sdk.registerPlacements([placementObject]);
                     sdk.openExperienceForPlacement([placementObject]);
                 }
             } catch (e) {
@@ -390,13 +447,13 @@
             var configDataUrl = this.config.configDataUrl;
             if (!configDataUrl) {
                 log('No configDataUrl configured, skipping refresh');
-                return;
+                return Promise.resolve();
             }
 
             var self = this;
             log('Refreshing shipping contact from server:', configDataUrl);
 
-            fetch(configDataUrl, {
+            return fetch(configDataUrl, {
                 method: 'GET',
                 headers: { 'X-Requested-With': 'XMLHttpRequest' }
             })
