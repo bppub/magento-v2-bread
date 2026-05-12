@@ -1,7 +1,10 @@
 == Changelog ==
 
-= 2.4.8
+= 2.4.9
 * Current release
+* Fix checkout issue when payment method is selected first
+
+= 2.4.8
 * Add Hyva theme and Hyva Checkout compatibility
 * Add CSP (Content Security Policy) whitelist for Bread SDK domains
 * Fix SDK loading for stores with strict CSP policies
