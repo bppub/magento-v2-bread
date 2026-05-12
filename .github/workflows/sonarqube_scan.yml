@@ -1,0 +1,24 @@
+name: Sonarqube
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    types: [opened, synchronize, reopened]
+jobs:
+  build:
+    name: Sonarqube Scan
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - uses: sonarsource/sonarqube-scan-action@master
+        with:
+          args: >
+            -Dsonar.scm.revision=${{ github.event.pull_request.head.sha }}
+            -Dsonar.verbose=true
+        env:
+          SONAR_TOKEN: ${{ secrets.SONARQUBE_API_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONARQUBE_API_HOST }}
+
