@@ -220,15 +220,19 @@ class Client extends \Magento\Framework\Model\AbstractModel
                 'MESSAGE' => 'Running transaction update with merchantOrderId',
                 'orderId' => $merchantOrderId
             ]);
-            $data = '{"externalID":"' . $merchantOrderId . '","metadata":{"externalMerchantData":"externalInfo"}}';
-            
-            $updateMerchantOrderIdResult = $this->call(
-                    $this->getTransactionInfoUrl($breadTransactionId),
-                    $data,
-                    \Laminas\Http\Request::METHOD_PATCH,
-                    false
-            );
-            $this->logger->info('Response: ' . json_encode($updateMerchantOrderIdResult) . 'Bread trxId: '. $breadTransactionId);
+            if (!empty($merchantOrderId)) {
+                $data = '{"externalID":"' . $merchantOrderId . '","metadata":{"externalMerchantData":"externalInfo"}}';
+
+                $updateMerchantOrderIdResult = $this->call(
+                        $this->getTransactionInfoUrl($breadTransactionId),
+                        $data,
+                        \Laminas\Http\Request::METHOD_PATCH,
+                        false
+                );
+                $this->logger->info('Response: ' . json_encode($updateMerchantOrderIdResult) . 'Bread trxId: '. $breadTransactionId);
+            } else {
+                $this->logger->log(['WARNING' => 'merchantOrderId is empty, skipping externalID update for Bread trxId: ' . $breadTransactionId]);
+            }
 
             return $result;
         } else {
@@ -680,7 +684,7 @@ class Client extends \Magento\Framework\Model\AbstractModel
                     'Content-Type: application/json',
                     $authorization]);
                 curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
-                curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'PUT');
+                curl_setopt($curl, CURLOPT_CUSTOMREQUEST, strtoupper($method));
             }
 
             if ($method == \Laminas\Http\Request::METHOD_GET) {

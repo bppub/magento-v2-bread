@@ -80,6 +80,7 @@
             transactionId: '',
             errorMessage: '',
             wasSetup: false,
+            breadSdk: null,
             title: '',
             
             // Config from window.checkoutConfig (populated by existing ConfigProvider)
@@ -104,6 +105,10 @@
                 this.isSelected = true;
                 if (!this.wasSetup) {
                     this.setupBreadButton();
+                } else if (this.breadSdk) {
+                    const placement = this.buildPlacement();
+                    this.breadSdk.registerPlacements([placement]);
+                    this.breadSdk.openExperienceForPlacement([placement]);
                 }
             },
             
@@ -139,6 +144,7 @@
                             }
                         });
                         
+                        this.breadSdk = breadSdk;
                         this.wasSetup = true;
                     }
                     
@@ -153,16 +159,16 @@
             },
             
             /**
-             * Register placement with Bread SDK
+             * Build the placement object for the Bread SDK
              */
-            registerPlacement(breadSdk) {
+            buildPlacement() {
                 const breadConfig = this.config.breadConfig || {};
                 const items = breadConfig.items || [];
                 const currencyCode = breadConfig.currencyCode || 'USD';
-                
+
                 const itemsObject = [];
                 let grandTotal = 0;
-                
+
                 items.forEach((item) => {
                     grandTotal += item.price * item.quantity;
                     itemsObject.push({
@@ -175,8 +181,8 @@
                         itemUrl: item.detailUrl || ''
                     });
                 });
-                
-                const data = {
+
+                return {
                     allowCheckout: true,
                     domID: 'bread-checkout-btn-payment',
                     order: {
@@ -189,7 +195,13 @@
                         totalTax: { value: 0, currency: currencyCode }
                     }
                 };
-                
+            },
+
+            /**
+             * Register placement with Bread SDK (first-time init)
+             */
+            registerPlacement(breadSdk) {
+                const data = this.buildPlacement();
                 breadSdk.registerPlacements([data]);
                 breadSdk.setInitMode('manual');
                 breadSdk.init();

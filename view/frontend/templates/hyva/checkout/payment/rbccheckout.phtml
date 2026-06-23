@@ -78,6 +78,7 @@ function initRbcCheckoutPayment() {
         transactionId: '',
         errorMessage: '',
         wasSetup: false,
+        breadSdk: null,
         title: '',
         config: {},
         
@@ -99,6 +100,10 @@ function initRbcCheckoutPayment() {
             this.isSelected = true;
             if (!this.wasSetup) {
                 this.setupRbcButton();
+            } else if (this.breadSdk) {
+                const placement = this.buildPlacement();
+                this.breadSdk.registerPlacements([placement]);
+                this.breadSdk.openExperienceForPlacement([placement]);
             }
         },
         
@@ -128,40 +133,12 @@ function initRbcCheckoutPayment() {
                         if (app?.transactionId) this.transactionId = app.transactionId;
                     });
                     
+                    this.breadSdk = rbcSdk;
                     this.wasSetup = true;
                 }
                 
-                const breadConfig = this.config.breadConfig || {};
-                const items = breadConfig.items || [];
-                const currency = breadConfig.currencyCode || 'USD';
-                
-                let total = 0;
-                const itemsObj = items.map(item => {
-                    total += item.price * item.quantity;
-                    return {
-                        name: item.name,
-                        quantity: item.quantity,
-                        unitPrice: { value: item.price, currency: currency },
-                        itemUrl: item.detailUrl || '',
-                        shippingCost: { value: 0, currency: currency },
-                        unitTax: { value: 0, currency: currency }
-                    };
-                });
-                
-                rbcSdk.registerPlacements([{
-                    allowCheckout: true,
-                    domID: 'rbc-checkout-btn-payment',
-                    order: {
-                        currency: currency,
-                        items: itemsObj,
-                        subTotal: { value: total, currency: currency },
-                        totalPrice: { value: total, currency: currency },
-                        totalDiscounts: { value: 0, currency: currency },
-                        totalShipping: { value: 0, currency: currency },
-                        totalTax: { value: 0, currency: currency }
-                    }
-                }]);
-                
+                const placement = this.buildPlacement();
+                rbcSdk.registerPlacements([placement]);
                 rbcSdk.setInitMode('manual');
                 rbcSdk.init();
                 
@@ -171,6 +148,38 @@ function initRbcCheckoutPayment() {
             }
             
             this.isLoading = false;
+        },
+        buildPlacement() {
+            const breadConfig = this.config.breadConfig || {};
+            const items = breadConfig.items || [];
+            const currency = breadConfig.currencyCode || 'USD';
+
+            let total = 0;
+            const itemsObj = items.map(item => {
+                total += item.price * item.quantity;
+                return {
+                    name: item.name,
+                    quantity: item.quantity,
+                    unitPrice: { value: item.price, currency: currency },
+                    itemUrl: item.detailUrl || '',
+                    shippingCost: { value: 0, currency: currency },
+                    unitTax: { value: 0, currency: currency }
+                };
+            });
+
+            return {
+                allowCheckout: true,
+                domID: 'rbc-checkout-btn-payment',
+                order: {
+                    currency: currency,
+                    items: itemsObj,
+                    subTotal: { value: total, currency: currency },
+                    totalPrice: { value: total, currency: currency },
+                    totalDiscounts: { value: 0, currency: currency },
+                    totalShipping: { value: 0, currency: currency },
+                    totalTax: { value: 0, currency: currency }
+                }
+            };
         }
     };
 }
