@@ -194,7 +194,9 @@ class ValidateOrder extends \Bread\BreadCheckout\Controller\Checkout
             $quote->setCustomerEmail($data['billingContact']['email']);
         }
 
-        $this->checkoutSession->setBreadTransactionId($data['breadTransactionId']);
+        // bread_2 API uses 'id'; classic API uses 'breadTransactionId'
+        $breadTransactionId = isset($data['id']) ? $data['id'] : $data['breadTransactionId'];
+        $this->checkoutSession->setBreadTransactionId($breadTransactionId);
 
         $productPage = $this->getRequest()->getParam('product_page');
         if ($productPage) {
@@ -249,7 +251,7 @@ class ValidateOrder extends \Bread\BreadCheckout\Controller\Checkout
         $quote->setTotalsCollectedFlag(false)->collectTotals()->save();
 
         $quote->getPayment()->importData(['method' => 'breadcheckout']);
-        $quote->getPayment()->setTransactionId($data['breadTransactionId']);
+        $quote->getPayment()->setTransactionId($breadTransactionId);
         $quote->getPayment()->setAdditionalData('BREAD CHECKOUT DATA', json_encode($data));
 
         try {

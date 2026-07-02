@@ -119,6 +119,12 @@
                 log('Already approved, calling original place order');
                 return this.originalPlaceOrder();
             }
+
+            // Preserve Hyva checkout validation behavior before opening Bread modal.
+            if (!this.validateRequiredCheckoutFields()) {
+                log('Checkout validation failed, blocking Bread modal');
+                return Promise.reject('Checkout validation failed');
+            }
             
             log('Need Bread approval, opening modal');
             
@@ -292,6 +298,42 @@
             }
             var addr = shippingContact.address;
             return addr.address1 && addr.locality && addr.region && addr.postalCode && addr.country;
+        },
+
+        validateRequiredCheckoutFields: function() {
+            var fields = document.querySelectorAll('input, select, textarea');
+            var hasInvalidField = false;
+
+            for (var i = 0; i < fields.length; i++) {
+                var field = fields[i];
+                var type = (field.type || '').toLowerCase();
+
+                if (!field || field.disabled || type === 'hidden' || type === 'submit' || type === 'button') {
+                    continue;
+                }
+
+                // Skip fields that are not currently displayed in checkout.
+                if (field.offsetParent === null) {
+                    continue;
+                }
+
+                // Validate only fields declared as required by checkout templates
+                var isRequired = field.required || field.getAttribute('aria-required') === 'true';
+                if (!isRequired) {
+                    continue;
+                }
+
+                if (!field.checkValidity()) {
+                    hasInvalidField = true;
+                    try {
+                        field.reportValidity();
+                    } catch (e) {
+                        // some browsers may throw for detached nodes...continue checking remaining fields
+                    }
+                }
+            }
+
+            return !hasInvalidField;
         },
 
         openBreadModal: function() {
