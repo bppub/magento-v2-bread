@@ -1,7 +1,10 @@
 == Changelog ==
 
-= 2.4.9
+= 2.5.0
 * Current release
+* Fix Hyva checkout
+
+= 2.4.9
 * Fix checkout issue when payment method is selected first
 
 = 2.4.8
