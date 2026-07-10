@@ -111,7 +111,7 @@ class Client extends \Magento\Framework\Model\AbstractModel
         $payment = $this->order->getPayment();
         $paymentApiVersion = $payment->getData('bread_api_version');
         $this->logger->info('Payment API version: '. $paymentApiVersion);
-        if(!is_null($paymentApiVersion) && in_array($paymentApiVersion, ['classic','bread_2'])) {
+        if(!is_null($paymentApiVersion) && in_array($paymentApiVersion, ['bread_2'])) {
             $apiVersion = strtolower($paymentApiVersion);
         }
         
@@ -167,7 +167,7 @@ class Client extends \Magento\Framework\Model\AbstractModel
         
         $payment = $this->order->getPayment();
         $paymentApiVersion = $payment->getData('bread_api_version');
-        if(!is_null($paymentApiVersion) && in_array($paymentApiVersion, ['classic','bread_2'])) {
+        if(!is_null($paymentApiVersion) && in_array($paymentApiVersion, ['bread_2'])) {
             $apiVersion = strtolower($paymentApiVersion);
         }
 
@@ -312,7 +312,7 @@ class Client extends \Magento\Framework\Model\AbstractModel
         
         $payment = $this->order->getPayment();
         $paymentApiVersion = $payment->getData('bread_api_version');
-        if(!is_null($paymentApiVersion) && in_array($paymentApiVersion, ['classic','bread_2'])) {
+        if(!is_null($paymentApiVersion) && in_array($paymentApiVersion, ['bread_2'])) {
             $apiVersion = strtolower($paymentApiVersion);
         }
         
@@ -368,7 +368,7 @@ class Client extends \Magento\Framework\Model\AbstractModel
         
         $payment = $this->order->getPayment();
         $paymentApiVersion = $payment->getData('bread_api_version');
-        if(!is_null($paymentApiVersion) && in_array($paymentApiVersion, ['classic','bread_2'])) {
+        if(!is_null($paymentApiVersion) && in_array($paymentApiVersion, ['bread_2'])) {
             $apiVersion = strtolower($paymentApiVersion);
         }
         
@@ -491,7 +491,7 @@ class Client extends \Magento\Framework\Model\AbstractModel
         if(!is_null($this->order)) {
             $payment = $this->order->getPayment();
             $paymentApiVersion = $payment->getData('bread_api_version');
-            if (!is_null($paymentApiVersion) && in_array($paymentApiVersion, ['classic', 'bread_2'])) {
+            if (!is_null($paymentApiVersion) && in_array($paymentApiVersion, ['bread_2'])) {
                 $apiVersion = strtolower($paymentApiVersion);
             }
         }
@@ -561,92 +561,7 @@ class Client extends \Magento\Framework\Model\AbstractModel
                 ]);
                 throw $e;
             }
-        } else {
-            // @codingStandardsIgnoreStart
-            try {
-                $curl = curl_init($url);
-                curl_setopt($curl, CURLOPT_HEADER, 0);
-                curl_setopt($curl, CURLOPT_USERPWD, $username . ':' . $password);
-                curl_setopt($curl, CURLOPT_TIMEOUT, 30);
-
-                if ($method == \Laminas\Http\Request::METHOD_POST) {
-                    curl_setopt($curl, CURLOPT_POST, 1);
-                    curl_setopt($curl, CURLOPT_HTTPHEADER, [
-                        'Content-Type: application/json',
-                        'Content-Length: ' . strlen($this->jsonHelper->jsonEncode($data))]);
-                    curl_setopt($curl, CURLOPT_POSTFIELDS, $this->jsonHelper->jsonEncode($data));
-                }
-
-                if ($method == \Laminas\Http\Request::METHOD_PUT) {
-                    curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'PUT');
-                    curl_setopt($curl, CURLOPT_POSTFIELDS, $this->jsonHelper->jsonEncode($data));
-                }
-
-                curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-                $result = curl_exec($curl);
-                $status = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-                $this->logger->info('Sending request to Bread classic APIs');
-                $this->logger->info('Response: ' . json_encode($result));
-                if ($status != 200) {
-                    $this->logger->log(curl_error($curl));
-
-                    //TODO: rewrite this when API is updated to better handle errors, instead of searching through the description string
-                    // Need to explicitly say !== false instead of === true or something similar because of what strpos returns
-                    $isSplitPayDecline = strpos($result, "There's an issue with authorizing the credit card portion") !== false;
-
-                    if ($isSplitPayDecline) {
-                        $this->logger->info('Is Split pay decline');
-                        if ($this->helper->isSplitPayAutoDecline()) {
-                            $this->logger->info('Split pay auto-decline enabled. Transaction will be cancelled');
-                            $this->cancel($this->getBreadTransactionId());
-                        }
-
-                        $errorMessage = 'The credit/debit card portion of your transaction was declined. '
-                                . 'Please use a different card or contact your bank. Otherwise, you can still check out with '
-                                . 'an amount covered by your Bread loan capacity.';
-                    } else {
-                        $errorMessage = 'Call to Bread API failed.';
-                    }
-
-                    throw new \Magento\Framework\Exception\LocalizedException(
-                            __($errorMessage)
-                    );
-                }
-            } catch (\Throwable $e) {
-                $this->logger->log([
-                    'USER' => $username,
-                    'PASSWORD' => $password,
-                    'URL' => $url,
-                    'STATUS' => $status,
-                    'DATA' => $data,
-                    'RESULT' => $result
-                ]);
-
-                curl_close($curl);
-                throw $e;
-            }
-
-            curl_close($curl);
-            // @codingStandardsIgnoreEnd
-
-            $this->logger->log(
-                    [
-                        'USER' => $username,
-                        'PASSWORD' => $password,
-                        'URL' => $url,
-                        'DATA' => $data,
-                        'RESULT' => $result
-                    ]
-            );
-
-            if (!$this->isJson($result)) {
-                throw new \Magento\Framework\Exception\LocalizedException(
-                        __('API Response Is Not Valid JSON.  Result: ' . $result)
-                );
-            }
-
-            return $this->jsonHelper->jsonDecode($result);
-        }        
+        }
     }
     
     /**

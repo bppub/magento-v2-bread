@@ -19,7 +19,6 @@ class ApiVersion implements \Magento\Framework\Option\ArrayInterface {
      */
     public function toOptionArray() {
         return [
-            ['value' => 'classic', 'label' => __('Bread Classic')],
             ['value' => 'bread_2', 'label' => __('Bread Platform')]
         ];
     }
@@ -31,7 +30,6 @@ class ApiVersion implements \Magento\Framework\Option\ArrayInterface {
      */
     public function toArray() {
         return [
-            'classic' => __('Bread Classic'),
             'bread_2' => __('Bread Platform')
         ];
     }

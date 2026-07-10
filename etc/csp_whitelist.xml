@@ -3,14 +3,12 @@
     <policies>
         <policy id="script-src">
             <values>
-                <value id="bread_classic_script" type="host">*.getbread.com</value>
                 <value id="bread_platform_script" type="host">*.breadpayments.com</value>
                 <value id="bread_platform_script_ca" type="host">*.rbcpayplan.com</value>
             </values>
         </policy>
         <policy id="connect-src">
             <values>
-                <value id="bread_classic_connect" type="host">*.getbread.com</value>
                 <value id="bread_platform_connect" type="host">*.breadpayments.com</value>
                 <value id="bread_platform_connect_ca" type="host">*.rbcpayplan.com</value>
                 <value id="bread_gateway_connect" type="host">*.breadgateway.net</value>
@@ -18,14 +16,12 @@
         </policy>
         <policy id="frame-src">
             <values>
-                <value id="bread_classic_frame" type="host">*.getbread.com</value>
                 <value id="bread_platform_frame" type="host">*.breadpayments.com</value>
                 <value id="bread_platform_frame_ca" type="host">*.rbcpayplan.com</value>
             </values>
         </policy>
         <policy id="img-src">
             <values>
-                <value id="bread_classic_img" type="host">*.getbread.com</value>
                 <value id="bread_platform_img" type="host">*.breadpayments.com</value>
                 <value id="bread_platform_img_ca" type="host">*.rbcpayplan.com</value>
             </values>
