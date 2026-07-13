@@ -1,0 +1,57 @@
+name: Deploy Magento2 Plugin to ADS Dev environment # http://ec2-100-25-3-18.compute-1.amazonaws.com
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Clear target directory on EC2
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ env.ADS_HOST }}
+        username: ${{ env.ADS_USER }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        port: 22
+        script: |
+          rm -rf /home/ubuntu/github-workflow/*
+
+    - name: Copy plugin to EC2
+      uses: appleboy/scp-action@master
+      with:
+        host: ${{ env.ADS_HOST }}
+        username: ${{ env.ADS_USER }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        port: 22
+        source: "."
+        target: "/home/ubuntu/github-workflow" # temp location on ec2
+
+    - name: SSH commands
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ env.ADS_HOST }}
+        username: ${{ env.ADS_USER }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        port: 22
+        script: |
+          cd /var/www/magento2
+
+          # Uninstall old plugin
+          php bin/magento module:disable Bread_BreadCheckout --clear-static-content
+          rm -rf app/code/Bread/Bread_BreadCheckout/*
+
+          # Copy new plugin files
+          cp -R /home/ubuntu/github-workflow app/code/Bread/Bread_BreadCheckout
+
+          # Install new plugin
+          php bin/magento module:enable Bread_BreadCheckout --clear-static-content
+          php bin/magento setup:upgrade
+          php -dmemory_limit=2G bin/magento setup:di:compile
+          php bin/magento cache:flush
