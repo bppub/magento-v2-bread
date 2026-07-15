@@ -214,14 +214,11 @@ class LandingPage extends \Magento\Framework\App\Action\Action implements CsrfAw
             $data = $this->paymentApiClient->getInfo($transactionId, $apiVersion);
             $this->logger->log('Trx details :: ' . json_encode($data));
 
-            //Create the customer
-            $customer = $this->customerFactory->create();
-            $customer->setWebsiteId($this->storeManager->getWebsite()->getId());
-            $customer->loadByEmail($data["billingContact"]["email"]);
-
-            if ($customer->getId()) {
-                $this->customerSession->setCustomerAsLoggedIn($customer);
-            }
+            // NOTE (security): Do NOT authenticate the customer here. The email address in
+            // $data originates from a Bread transaction referenced only by request parameters,
+            // which would allow an attacker who can enumerate/predict quote IDs to log in as
+            // any customer whose email is known. The order is still associated with the
+            // correct customer inside processBackendOrder() via customerHelper->createCustomer().
 
             $this->processBackendOrder($orderRef, $data, $transactionId, $apiVersion);
 
@@ -246,14 +243,7 @@ class LandingPage extends \Magento\Framework\App\Action\Action implements CsrfAw
                 $data       = $this->paymentApiClient->getInfo($transactionId);
                 $this->logger->log('Trx details :: ' . json_encode($data));
 
-                $customer   = $this->customerFactory->create();
-
-                $customer->setWebsiteId($this->storeManager->getWebsite()->getId());
-                $customer->loadByEmail($data["billingContact"]["email"]);
-
-                if ($customer->getId()) {
-                    $this->customerSession->setCustomerAsLoggedIn($customer);
-                }
+                // NOTE (security): Do NOT authenticate the customer here. See processPlatformCartOrder().
 
                 $this->processBackendOrder($orderRef, $data, $transactionId);
 
@@ -303,7 +293,21 @@ class LandingPage extends \Magento\Framework\App\Action\Action implements CsrfAw
         }
         $quote->getPayment()->setMethod('breadcheckout');
 
-        if (!$customer->getId()) {
+        // Associate the customer with the quote directly, WITHOUT authenticating the
+        // browser session. This replaces the previous setCustomerAsLoggedIn() call,
+        // which was only masking a missing customer/order association: for an existing
+        // customer, Helper\Customer::createCustomer() returns early without setting the
+        // quote's customer id. Binding it here ensures the resulting order is linked to
+        // the correct account (fixing the "missing order id" issue) while keeping the
+        // request unauthenticated.
+        $customerId = $customer->getId() ?: $quote->getCustomerId();
+        if ($customerId) {
+            $quote->setCustomerId($customerId)
+                ->setCustomerIsGuest(false);
+            if ($customer->getEmail()) {
+                $quote->setCustomerEmail($customer->getEmail());
+            }
+        } else {
             $quote->setCustomerIsGuest(true);
         }
 
@@ -357,10 +361,11 @@ class LandingPage extends \Magento\Framework\App\Action\Action implements CsrfAw
             $this->customerSession->setBreadItemAddedToQuote(false);
         }
 
-        if ($customer->getId()) {
-            $this->customerSession->setCustomer($customer);
-            $this->customerSession->setCustomerAsLoggedIn($customer);
-        }
+        // NOTE (security): Do not touch the customer session here. This controller can
+        // be reached from a Bread server-to-server callback (no user session) and even
+        // when it is reached through the customer's browser the identity in $data is
+        // not authenticated by the customer. The order remains associated with the
+        // customer via the quote (see customerHelper->createCustomer above).
 
         $this->checkoutSession->setLastOrderId($order->getId())
             ->setLastRealOrderId($order->getIncrementId())
@@ -380,6 +385,23 @@ class LandingPage extends \Magento\Framework\App\Action\Action implements CsrfAw
         $this->_redirect('checkout/onepage/success');
     }
     
+    /**
+     * CSRF handling.
+     *
+     * This endpoint is used in two ways that are NOT initiated by an authenticated
+     * customer browser session and therefore cannot present a Magento form key:
+     *   1. A server-to-server callback POST from Bread carrying a JSON transactionId.
+     *   2. A browser redirect back from the Bread hosted flow (bread_1 legacy).
+     *
+     * Request authenticity is enforced by re-fetching the transaction from Bread's
+     * API using the merchant's server-side credentials (see paymentApiClient->getInfo).
+     * A forged transactionId cannot resolve to a valid transaction, and the order
+     * association is validated against the supplied orderRef / quote.
+     *
+     * TODO: If/when Bread exposes a webhook signature header, verify it here and
+     *       return an InvalidRequestException from createCsrfValidationException()
+     *       for any request that fails signature verification.
+     */
     public function createCsrfValidationException(RequestInterface $request): ? InvalidRequestException {
         return null;
     }

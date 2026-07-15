@@ -101,6 +101,21 @@ abstract class Checkout extends \Magento\Framework\App\Action\Action
     }
 
     /**
+     * Whether the current request is an AJAX (XHR) request.
+     *
+     * Used as a defense-in-depth CSRF control on state-changing endpoints, in
+     * addition to Magento's default form-key validation. A custom header such as
+     * X-Requested-With cannot be set by a cross-origin HTML form auto-submit, and
+     * setting it from fetch/XHR forces a CORS preflight the server will not approve.
+     *
+     * @return bool
+     */
+    protected function isAjaxRequest()
+    {
+        return strtolower((string) $this->getRequest()->getHeader('X-Requested-With')) === 'xmlhttprequest';
+    }
+
+    /**
      * Add Item To Quote
      *
      * @param  \Magento\Quote\Model\Quote     $quote
