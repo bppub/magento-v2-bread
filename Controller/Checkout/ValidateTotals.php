@@ -8,11 +8,7 @@
  */
 namespace Bread\BreadCheckout\Controller\Checkout;
 
-use Magento\Framework\App\CsrfAwareActionInterface;
-use Magento\Framework\App\Request\InvalidRequestException;
-use Magento\Framework\App\RequestInterface;
-
-class ValidateTotals extends \Bread\BreadCheckout\Controller\Checkout implements CsrfAwareActionInterface
+class ValidateTotals extends \Bread\BreadCheckout\Controller\Checkout
 {
     /**
      * @var \Magento\Framework\Json\EncoderInterface
@@ -53,21 +49,6 @@ class ValidateTotals extends \Bread\BreadCheckout\Controller\Checkout implements
         );
     }
 
-    /**
-     * @inheritDoc
-     */
-    public function createCsrfValidationException(RequestInterface $request): ?InvalidRequestException
-    {
-        return null;
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function validateForCsrf(RequestInterface $request): ?bool
-    {
-        return true;
-    }
 
     /**
      * Check whether Bread total & Magento total match
@@ -76,6 +57,13 @@ class ValidateTotals extends \Bread\BreadCheckout\Controller\Checkout implements
      */
     public function execute()
     {
+        // Defense-in-depth CSRF control alongside Magento's default form-key check.
+        if (!$this->isAjaxRequest()) {
+            return $this->resultFactory->create(\Magento\Framework\Controller\ResultFactory::TYPE_JSON)
+                ->setHttpResponseCode(403)
+                ->setData(['valid' => false, 'error' => (string) __('Invalid request.')]);
+        }
+
         $params = $this->getRequest()->getParams();
         $result = ['valid' => false];
 

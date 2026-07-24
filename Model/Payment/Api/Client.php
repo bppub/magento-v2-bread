@@ -614,8 +614,6 @@ class Client extends \Magento\Framework\Model\AbstractModel
                 }
             } catch (\Throwable $e) {
                 $this->logger->log([
-                    'USER' => $username,
-                    'PASSWORD' => $password,
                     'URL' => $url,
                     'STATUS' => $status,
                     'DATA' => $data,
@@ -631,8 +629,6 @@ class Client extends \Magento\Framework\Model\AbstractModel
 
             $this->logger->log(
                     [
-                        'USER' => $username,
-                        'PASSWORD' => $password,
                         'URL' => $url,
                         'DATA' => $data,
                         'RESULT' => $result
@@ -720,7 +716,6 @@ class Client extends \Magento\Framework\Model\AbstractModel
                     'ERROR' => 'Code is not equal to 200 or 201 or 204',
                     'STATUS' => $status,
                     'RESULT' => $result,
-                    'TOKEN' => $authToken,
                     'URL' => $url
                 ]);
                 $errorMessage = 'Call to Bread API failed';
@@ -744,7 +739,6 @@ class Client extends \Magento\Framework\Model\AbstractModel
             ];
         } catch (\Throwable $e) {
             $this->logger->log([
-                'AUTHTOKEN' => $authToken,
                 'URL' => $url,
                 'DATA' => $data,
                 'MESSAGE' => $e->getMessage()
@@ -953,7 +947,7 @@ class Client extends \Magento\Framework\Model\AbstractModel
         } catch (\Throwable $e) {
             $this->logger->log([
                 'MESSAGE' => $e->getMessage(),
-                'DATA' => $data
+                'URL' => $url,
             ]);
 
             curl_close($curl);

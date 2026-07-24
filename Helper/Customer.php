@@ -212,6 +212,10 @@ class Customer extends Data
         // Don't create a new account if one already exists for this email
         $customer->loadByEmail($email);
         if ($customer->getId()) {
+            // Associate the existing customer with the quote so the resulting order is
+            // linked to the correct account. Do NOT authenticate the session here.
+            $quote->setCustomerId($customer->getId())
+                ->setCustomerIsGuest(false);
             return $customer;
         }
 

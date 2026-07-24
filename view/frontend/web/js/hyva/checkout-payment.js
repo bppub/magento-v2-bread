@@ -612,17 +612,21 @@
         },
         validatePaymentMethod: function(txnId) {
             var paymentUrl = this.config.paymentUrl;
-            
+            var formKey = (typeof hyva !== 'undefined' && typeof hyva.getFormKey === 'function')
+                ? hyva.getFormKey()
+                : (document.querySelector('input[name="form_key"]') || {}).value || '';
+
             log('Calling validatePaymentMethod:', paymentUrl, 'with txnId:', txnId);
-            
+
             return fetch(paymentUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
                     'X-Requested-With': 'XMLHttpRequest'
                 },
-                body: 'token=' + encodeURIComponent(txnId) + 
-                      '&currency=' + encodeURIComponent(this.config.currency)
+                body: 'token=' + encodeURIComponent(txnId) +
+                      '&currency=' + encodeURIComponent(this.config.currency) +
+                      '&form_key=' + encodeURIComponent(formKey)
             })
             .then(function(response) {
                 log('validatePaymentMethod HTTP status:', response.status);
@@ -636,16 +640,20 @@
 
         validateTotals: function(txnId) {
             var validateTotalsUrl = this.config.validateTotalsUrl;
-            
+            var formKey = (typeof hyva !== 'undefined' && typeof hyva.getFormKey === 'function')
+                ? hyva.getFormKey()
+                : (document.querySelector('input[name="form_key"]') || {}).value || '';
+
             log('Calling validateTotals:', validateTotalsUrl, 'with txnId:', txnId);
-            
+
             return fetch(validateTotalsUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
                     'X-Requested-With': 'XMLHttpRequest'
                 },
-                body: 'bread_transaction_id=' + encodeURIComponent(txnId)
+                body: 'bread_transaction_id=' + encodeURIComponent(txnId) +
+                      '&form_key=' + encodeURIComponent(formKey)
             })
             .then(function(response) {
                 log('validateTotals HTTP status:', response.status);

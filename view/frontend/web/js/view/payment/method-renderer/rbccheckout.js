@@ -190,7 +190,7 @@ define(
 
                 $.ajax({
                     url: paymentUrl,
-                    data: { token: token, currency: breadConfig.currencyCode},
+                    data: { token: token, currency: breadConfig.currencyCode, form_key: window.checkoutConfig && window.checkoutConfig.formKey},
                     type: 'post',
                     context: this,
                     beforeSend: function() {
@@ -330,7 +330,7 @@ define(
 
                 $.ajax({
                     url: validateTotalsUrl,
-                    data: { bread_transaction_id: tx_id },
+                    data: { bread_transaction_id: tx_id, form_key: window.checkoutConfig && window.checkoutConfig.formKey },
                     type: 'post',
                     context: this
                 }).done(

@@ -8,11 +8,7 @@
  */
 namespace Bread\BreadCheckout\Controller\Checkout;
 
-use Magento\Framework\App\CsrfAwareActionInterface;
-use Magento\Framework\App\Request\InvalidRequestException;
-use Magento\Framework\App\RequestInterface;
-
-class ValidatePaymentMethod extends \Bread\BreadCheckout\Controller\Checkout implements CsrfAwareActionInterface
+class ValidatePaymentMethod extends \Bread\BreadCheckout\Controller\Checkout
 {
     /**
      * @var \Bread\BreadCheckout\Model\Payment\Api\Client
@@ -78,21 +74,6 @@ class ValidatePaymentMethod extends \Bread\BreadCheckout\Controller\Checkout imp
         );
     }
 
-    /**
-     * @inheritDoc
-     */
-    public function createCsrfValidationException(RequestInterface $request): ?InvalidRequestException
-    {
-        return null;
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function validateForCsrf(RequestInterface $request): ?bool
-    {
-        return true;
-    }
 
     /**
      * Add bread transaction ID to session and update
@@ -103,6 +84,12 @@ class ValidatePaymentMethod extends \Bread\BreadCheckout\Controller\Checkout imp
     public function execute()
     {
         $result = null;
+        // Defense-in-depth CSRF control alongside Magento's default form-key check.
+        if (!$this->isAjaxRequest()) {
+            return $this->resultFactory->create(\Magento\Framework\Controller\ResultFactory::TYPE_JSON)
+                ->setHttpResponseCode(403)
+                ->setData(['error' => (string) __('Invalid request.')]);
+        }
         try {
             $token = $this->getRequest()->getParam('token');
             $currencyCode = $this->getRequest()->getParam('currency', 'USD');
