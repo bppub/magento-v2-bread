@@ -6,12 +6,12 @@ $productId = $product->getId();
 $apiVersion = $block->getApiVersion();
 
 ?>
-<div id="bread-btn-cntnr-<?= /* @noEscape */ $productId; ?>">
-    <div id='bread-checkout-btn-<?= /* @noEscape */ $productId; ?>' title="Bread Checkout"
+<div id="bread-btn-cntnr-<?= $block->escapeHtmlAttr($productId); ?>">
+    <div id='bread-checkout-btn-<?= $block->escapeHtmlAttr($productId); ?>' title="Bread Checkout"
          class="button" <?= /* @noEscape */ $block->useDefaultButtonSizeCategory(); ?>>
         <?php if($apiVersion !== 'bread_2') :?> 
         <span>
-            <span><?= /* @noEscape */ __('Bread Checkout'); ?></span>
+            <span><?= $block->escapeHtml(__('Bread Checkout')); ?></span>
         </span>
         <?php endif; ?>
     </div>
@@ -19,15 +19,15 @@ $apiVersion = $block->getApiVersion();
 <?php if($apiVersion !== 'bread_2') :?> 
 <script type="text/javascript">
     require(['jquery'], function ($) {
-        document.configureButton<?= /* @noEscape */ $productId;?> = function (items) {
+        document.configureButton<?= (int)$productId;?> = function (items) {
             var address = <?= /* @noEscape */ $block->getShippingAddressData(); ?>;
             var billingAddress = <?= /* @noEscape */ $block->getBillingAddressData(); ?>;
             var labelOnly = <?= /* @noEscape */ $block->isLabelOnlyOnCategories(); ?>;
-            var buttonCss = '<?= /* @noEscape */ $block->getCATButtonDesign(); ?>';
+            var buttonCss = '<?= $block->escapeJs($block->getCATButtonDesign()); ?>';
             var financingInfo = <?= /* @noEscape */ $block->getFinancingJson(); ?>;
 
             var breadConfig = {
-                buttonId: 'bread-checkout-btn-<?= /* @noEscape */ $productId;?>',
+                buttonId: 'bread-checkout-btn-<?= (int)$productId;?>',
                 asLowAs: <?= /* @noEscape */ $block->isAsLowAsCAT(); ?>,
                 showInWindow: <?= /* @noEscape */ $block->getShowInWindowCAT()?>,
                 <?php if (!$block->isHealthcare()) : ?>
@@ -37,7 +37,7 @@ $apiVersion = $block->getApiVersion();
                 <?php endif; ?>
                 discounts: [],
                 allowCheckout: false,
-                buttonLocation: '<?= /* @noEscape */ $block->getCategoryPageLocation(); ?>',
+                buttonLocation: '<?= $block->escapeJs($block->getCategoryPageLocation()); ?>',
                 done: function (err, tx_token) {
                     if (tx_token !== undefined) {
                         var i = document.createElement('input');
@@ -45,7 +45,7 @@ $apiVersion = $block->getApiVersion();
                         i.name = 'token';
                         i.value = tx_token;
                         var f = document.createElement('form');
-                        f.action = '<?= /* @noEscape */ $block->getValidateOrderURL(); ?>';
+                        f.action = '<?= $block->escapeJs($block->getValidateOrderURL()); ?>';
                         f.method = 'POST';
                         f.appendChild(i);
                         document.body.appendChild(f);
@@ -81,7 +81,7 @@ $apiVersion = $block->getApiVersion();
                 var itemsPriceSum = items.reduce(function(sum, item) { return sum + item.price * item.quantity; }, 0) / 100;
                 breadConfig.financingProgramId = (itemsPriceSum >= cartSizeThreshold) ? cartSizeFinancingId : null;
             } else if (financingInfo.enabled && financingInfo.mode.sku){
-                var productSku = "<?= /* @noEscape */ $block->getProduct()->getSku(); ?>";
+                var productSku = "<?= $block->escapeJs($block->getProduct()->getSku()); ?>";
                 if(financingInfo.sku_limit.indexOf(productSku) !== -1){
                     breadConfig.financingProgramId = financingInfo.id;
                 }
@@ -99,11 +99,11 @@ $apiVersion = $block->getApiVersion();
             var product = <?= /* @noEscape */ $data; ?>;
             var originalPrice = product.price;
 
-            document.configureButton<?= /* @noEscape */ $productId; ?>([product]);
-            $("[data-role=priceBox][data-product-id=<?= /* @noEscape */ $productId;?>]").on("updatePrice", function (event, data) {
+            document.configureButton<?= (int)$productId; ?>([product]);
+            $("[data-role=priceBox][data-product-id=<?= (int)$productId;?>]").on("updatePrice", function (event, data) {
                 if (data) {
                     product.price = Math.round(originalPrice + data.prices.finalPrice.amount * 100);
-                    document.configureButton<?= /* @noEscape */ $productId; ?>([product]);
+                    document.configureButton<?= (int)$productId; ?>([product]);
                 }
             });
 

@@ -279,7 +279,7 @@ class Customer extends Data
         }
 
         $primaryAddressData     = $this->getFormattedDefaultShippingAddress();
-        return $this->jsonHelper->jsonEncode($primaryAddressData);
+        return json_encode($primaryAddressData, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
     }
 
     /**
@@ -294,7 +294,7 @@ class Customer extends Data
         }
 
         $primaryAddressData     = $this->getFormattedDefaultBillingAddress();
-        return $this->jsonHelper->jsonEncode($primaryAddressData);
+        return json_encode($primaryAddressData, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
     }
 
     /**
