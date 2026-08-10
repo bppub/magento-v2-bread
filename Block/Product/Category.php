@@ -199,7 +199,7 @@ class Category extends \Magento\Framework\View\Element\Template
     public function getProductDataJson($product)
     {
         $product->unsetData("final_price");
-        return json_encode($this->getProductDataArray($product), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
+        return $this->jsonEncode($this->getProductDataArray($product));
     }
 
     /**
