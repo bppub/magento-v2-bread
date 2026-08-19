@@ -4,12 +4,12 @@
     <div id="bread-checkout-btn" title="Bread Checkout" class="button" <?= /* @noEscape */ $block->getIsDefaultSize(); ?>>
         <?php if ($block->getApiVersion() !== 'bread_2') : ?>
             <span>
-                <span><?= /* @noEscape */ __('Bread Checkout'); ?></span>
+                <span><?= $block->escapeHtml(__('Bread Checkout')); ?></span>
             </span>
         <?php endif; ?>
     </div>
     <div class="button-prevent" id="button-prevent">
-        <span class="buy_error_tip override_tip" data-content="<?= /* @noEscape */ $block->productTypeErrorMessage() ?>">&nbsp;</span>
+        <span class="buy_error_tip override_tip" data-content="<?= $block->escapeHtmlAttr($block->productTypeErrorMessage()) ?>">&nbsp;</span>
     </div>
     <div class="splitpay-clickable-button" style="text-align: center;"></div>
 </div>
@@ -28,14 +28,14 @@
             document.configureButton = function (items) {
                 if (typeof window.BreadPayments !== 'undefined' || typeof window.RBCPayPlan !== 'undefined') {
                     let bread_sdk = null;
-                let config_client = "<?= /* @noEscape */ $block->getConfigClient(); ?>";
+                let config_client = "<?= $block->escapeJs($block->getConfigClient()); ?>";
                 if (config_client === 'RBC') {
                         bread_sdk = window.RBCPayPlan;
                 } else {
                         bread_sdk = window.BreadPayments;
                 }
                 
-                let currentCurrencyCode = "<?= /* @noEscape */ $block->getCurrentCurrencyCode(); ?>";
+                let currentCurrencyCode = "<?= $block->escapeJs($block->getCurrentCurrencyCode()); ?>";
                 let itemsObject = [];
                 let total = 0;
                 for (var i = 0; i < items.length; i++) {
@@ -97,7 +97,7 @@
                     let onApproved = function onApproved(application) {};
                     let onCheckout = function onCheckout(application) {};
                     bread_sdk.setup({
-                        integrationKey: "<?= /* @noEscape */ $block->getIntegrationKey(); ?>"
+                        integrationKey: "<?= $block->escapeJs($block->getIntegrationKey()); ?>"
                     });
                     bread_sdk.on('INSTALLMENT:APPLICATION_DECISIONED', onApproved);
                     bread_sdk.on('INSTALLMENT:APPLICATION_CHECKOUT', onCheckout);
