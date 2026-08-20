@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Save bread API version for transactions that belong to Bread payment
  * method
@@ -7,42 +6,50 @@
  * @since 2.3.0
  * @author Maritim, Kip
  */
-
 namespace Bread\BreadCheckout\Observer;
 
+use Bread\BreadCheckout\Helper\Log;
+use Bread\BreadCheckout\Helper\Quote as Helper;
+use Magento\Framework\App\State;
 use Magento\Framework\Event\Observer as EventObserver;
 use Magento\Framework\Event\ObserverInterface;
+use Magento\Framework\Exception\LocalizedException;
+use Magento\Framework\Exception\NoSuchEntityException;
+use Magento\Quote\Model\QuoteRepository;
 
-class SaveBreadApiVersionObserver implements ObserverInterface {
-
+class SaveBreadApiVersionObserver implements ObserverInterface
+{
     /**
-     * 
-     * @var type
+     * @var Log
      */
     protected $logger;
 
     /**
-     * 
-     * @var type
+     * @var State
      */
     protected $_state;
 
     /**
-     * @var object 
+     * @var QuoteRepository
      */
     protected $_quoteRepository;
+
+    /**
+     * @var Helper
+     */
     protected $helper;
 
     /**
-     * 
-     * @param \Bread\BreadCheckout\Helper\Log $logger
-     * @param \Magento\Framework\App\State $state
+     * @param Log             $logger
+     * @param State           $state
+     * @param QuoteRepository $quoteRepository
+     * @param Helper          $helper
      */
     public function __construct(
-            \Bread\BreadCheckout\Helper\Log $logger,
-            \Magento\Framework\App\State $state,
-            \Magento\Quote\Model\QuoteRepository $quoteRepository,
-            \Bread\BreadCheckout\Helper\Quote $helper
+        Log $logger,
+        State $state,
+        QuoteRepository $quoteRepository,
+        Helper $helper
     ) {
         $this->logger = $logger;
         $this->_state = $state;
@@ -51,14 +58,22 @@ class SaveBreadApiVersionObserver implements ObserverInterface {
     }
 
     /**
-     * 
-     * @param EventObserver $observer
+     * Executes the observer logic for processing payment data during specific events.
+     *
+     * @param EventObserver $observer The observer object that contains event data such as payment and order information.
+     *
+     * @return void
+     * @throws LocalizedException
+     * @throws NoSuchEntityException
      */
     public function execute(EventObserver $observer) {
 
         if ($this->_state->getAreaCode() != \Magento\Framework\App\Area::AREA_ADMINHTML) {
             $paymentOrder = $observer->getEvent()->getPayment();
             $order = $paymentOrder->getOrder();
+            if (!$order->getQuoteId()) {
+                return;
+            }
             $quote = $this->_quoteRepository->get($order->getQuoteId());
             $paymentQuote = $quote->getPayment();
             $method = $paymentQuote->getMethodInstance()->getCode();
@@ -67,5 +82,4 @@ class SaveBreadApiVersionObserver implements ObserverInterface {
             }
         }
     }
-
 }
