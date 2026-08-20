@@ -270,6 +270,34 @@ class LandingPage extends \Magento\Framework\App\Action\Action implements CsrfAw
     {
         $quote = $this->quoteFactory->create()->loadByIdWithoutStore($orderRef);
 
+        if (!$quote || !$quote->getId()) {
+            throw new \Magento\Framework\Exception\LocalizedException(
+                __('Invalid order reference.')
+            );
+        }
+
+        // Verify the Bread transaction references this quote to prevent Insecure Direct Object Reference.
+        // For bread_2, the orderReference is set when creating the cart and returned
+        // in the transaction data. For bread_1, fall back to customer session check.
+        $txOrderRef = $data['orderReference'] ?? ($data['orderRef'] ?? null);
+        if ($txOrderRef !== null) {
+            if ((string) $txOrderRef !== (string) $orderRef) {
+                throw new \Magento\Framework\Exception\LocalizedException(
+                    __('Order reference mismatch.')
+                );
+            }
+        } else {
+            // No order reference in transaction data (bread_1 legacy flow):
+            // verify the quote belongs to the authenticated customer session.
+            $customerId = $this->customerSession->getCustomerId();
+            $quoteCustomerId = $quote->getCustomerId();
+            if (!$customerId || !$quoteCustomerId || (int) $customerId !== (int) $quoteCustomerId) {
+                throw new \Magento\Framework\Exception\LocalizedException(
+                    __('Quote ownership verification failed.')
+                );
+            }
+        }
+
         $billingAddress = null;
         $shippingAddress = null;
         if($apiVersion === 'bread_2') {
