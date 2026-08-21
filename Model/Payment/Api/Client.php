@@ -507,7 +507,7 @@ class Client extends \Magento\Framework\Model\AbstractModel
                     $getToken = $this->generateAuthToken($authTokenUrl, $username, $password);
                     if (isset($getToken['token'])) {
                         $authToken = $getToken['token'];
-                        $this->configWriter->save('payment/breadcheckout/bread_auth_token', $authToken, 'default');
+                        $this->helper->saveAuthToken($authToken);
                     } else {
                         $errorMessage = 'Call to Bread APIs failed.';
                         throw new \Magento\Framework\Exception\LocalizedException(
@@ -523,7 +523,7 @@ class Client extends \Magento\Framework\Model\AbstractModel
                     $getToken = $this->generateAuthToken($authTokenUrl, $username, $password);
                     if (isset($getToken['token'])) {
                         $authToken = $getToken['token'];
-                        $this->configWriter->save('payment/breadcheckout/bread_auth_token', $authToken, 'default');
+                        $this->helper->saveAuthToken($authToken);
 
                         $response = $this->callBread($url, $authToken, $data, $method, $jsonEncode);
 
