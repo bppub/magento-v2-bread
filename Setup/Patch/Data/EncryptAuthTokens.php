@@ -51,7 +51,7 @@ class EncryptAuthTokens implements DataPatchInterface
 
         foreach ($rows as $row) {
             $value = $row['value'];
-            if ($value === null || $value === '' || preg_match('/^\d+:\d+:/', $value)) {
+            if ($value === null || $value === '' || $this->isEncryptedToken($value)) {
                 continue;
             }
 
@@ -64,6 +64,17 @@ class EncryptAuthTokens implements DataPatchInterface
 
         $this->cacheTypeList->cleanType(Config::TYPE_IDENTIFIER);
         $this->moduleDataSetup->endSetup();
+    }
+
+    private function isEncryptedToken($value)
+    {
+        try {
+            $decryptedValue = $this->encryptor->decrypt($value);
+        } catch (\Throwable $exception) {
+            return false;
+        }
+
+            return $decryptedValue !== '' && $decryptedValue !== $value;
     }
 
     public static function getDependencies()
