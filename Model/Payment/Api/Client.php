@@ -19,6 +19,34 @@ class Client extends \Magento\Framework\Model\AbstractModel
     public $order               = null;
 
     /**
+     * Normalize a monetary amount to an integer, rounding rather than truncating. 
+     * Callers pass amounts already multiplied by 100, so this must not rescale.
+     *
+     * Uses bcmath (when available) to avoid floating-point precision loss.
+     *
+     * @param mixed $amount
+     * @return int
+     */
+    private function normalizeAmount($amount)
+    {
+        if (!is_numeric($amount)) {
+            throw new \Magento\Framework\Exception\LocalizedException(
+                __('Invalid amount value received during Bread amount validation.')
+            );
+        }
+
+        $amount = (string) $amount;
+
+        if (function_exists('bcadd') && function_exists('bcsub')) {
+            $rounded = $amount[0] === '-' ? bcsub($amount, '0.5', 0) : bcadd($amount, '0.5', 0);
+
+            return (int) $rounded;
+        }
+
+        return (int) round((float) $amount);
+    }
+
+    /**
      * @var \Magento\Framework\Model\Context
      */
     public $context;
@@ -179,12 +207,12 @@ class Client extends \Magento\Framework\Model\AbstractModel
             $breadAmount = trim($validateAmount['totalAmount']['value']);
             $currency = trim($validateAmount['totalAmount']['currency']);
             $amount = trim($amount);
-            if (((int) $breadAmount != (int) $amount) && (abs((int) $breadAmount - (int) $amount) >= 2)) {
+            if ($this->normalizeAmount($breadAmount) !== $this->normalizeAmount($amount)) {
                 $this->logger->log(
                         [
                             'ERROR' => 'BREAD AMOUNT AND QUOTE AMOUNT MIS-MATCH',
-                            'BREAD AMOUNT' => (int) $breadAmount,
-                            'QUOTE AMOUNT' => (int) $amount,
+                            'BREAD AMOUNT' => $breadAmount,
+                            'QUOTE AMOUNT' => $amount,
                             'RESULT' => $validateAmount
                         ]
                 );
@@ -239,12 +267,12 @@ class Client extends \Magento\Framework\Model\AbstractModel
             $breadAmount = trim($validateAmount['total']);
             $amount = trim($amount);
 
-            if (((int) $breadAmount != (int) $amount) && (abs((int) $breadAmount - (int) $amount) >= 2)) {
+            if ($this->normalizeAmount($breadAmount) !== $this->normalizeAmount($amount)) {
                 $this->logger->log(
                         [
                             'ERROR' => 'BREAD AMOUNT AND QUOTE AMOUNT MIS-MATCH',
-                            'BREAD AMOUNT' => (int) $breadAmount,
-                            'QUOTE AMOUNT' => (int) $amount,
+                            'BREAD AMOUNT' => $breadAmount,
+                            'QUOTE AMOUNT' => $amount,
                             'RESULT' => $validateAmount
                         ]
                 );
