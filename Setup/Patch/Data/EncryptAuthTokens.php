@@ -51,7 +51,15 @@ class EncryptAuthTokens implements DataPatchInterface
 
         foreach ($rows as $row) {
             $value = $row['value'];
-            if ($value === null || $value === '' || $this->isEncryptedToken($value)) {
+            if ($value === null || $value === '') {
+                continue;
+            }
+
+            if (!$this->isJwt($value) && $this->isEncryptedValue($value)) {
+                continue;
+            }
+
+            if (!$this->isJwt($value)) {
                 continue;
             }
 
@@ -66,7 +74,7 @@ class EncryptAuthTokens implements DataPatchInterface
         $this->moduleDataSetup->endSetup();
     }
 
-    private function isEncryptedToken($value)
+    private function isEncryptedValue($value)
     {
         try {
             $decryptedValue = $this->encryptor->decrypt($value);
@@ -74,7 +82,12 @@ class EncryptAuthTokens implements DataPatchInterface
             return false;
         }
 
-            return $decryptedValue !== '' && $decryptedValue !== $value;
+        return $this->isJwt($decryptedValue) || $decryptedValue === '0';
+    }
+
+    private function isJwt($value)
+    {
+        return substr_count((string) $value, '.') === 2;
     }
 
     public static function getDependencies()
