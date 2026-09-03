@@ -1,5 +1,4 @@
 <?php
-
 /**
  * API version options
  *
@@ -7,17 +6,21 @@
  * @copyright (c) Bread
  * @author Kip, Maritim <kip.maritim@breadfinancial.com>
  */
+declare(strict_types=1);
 
 namespace Bread\BreadCheckout\Model\System\Config\Source;
 
-class Tenant implements \Magento\Framework\Option\ArrayInterface {
+use Magento\Framework\Data\OptionSourceInterface;
 
+class Tenant implements OptionSourceInterface
+{
     /**
      * Options getter
      *
      * @return array
      */
-    public function toOptionArray() {
+    public function toOptionArray()
+    {
         return [
             ['value' => 'core', 'label' => __('CORE (US)')],
         ];
@@ -28,10 +31,10 @@ class Tenant implements \Magento\Framework\Option\ArrayInterface {
      *
      * @return array
      */
-    public function toArray() {
+    public function toArray()
+    {
         return [
-            'core' => __('CORE (US'),
+            'core' => __('CORE (US)'),
         ];
     }
-
 }
