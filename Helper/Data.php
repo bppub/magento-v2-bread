@@ -146,6 +146,11 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper {
     public $encryptor;
 
     /**
+     * @var \Magento\Framework\App\Config\Storage\WriterInterface
+     */
+    public $configWriter;
+
+    /**
      * @var \Magento\Framework\UrlInterfaceFactory
      */
     public $urlInterfaceFactory;
@@ -234,6 +239,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper {
      * @param \Magento\Framework\Encryption\Encryptor $encryptor
      * @param \Magento\Framework\UrlInterfaceFactory $urlInterfaceFactory
      * @param \Magento\Store\Model\StoreManagerInterface $storeManager
+     * @param \Magento\Framework\App\Config\Storage\WriterInterface $configWriter
      */
     public function __construct(
             \Magento\Framework\App\Helper\Context $helperContext,
@@ -241,7 +247,8 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper {
             \Magento\Framework\App\Request\Http $request,
             \Magento\Framework\Encryption\Encryptor $encryptor,
             \Magento\Framework\UrlInterfaceFactory $urlInterfaceFactory,
-            \Magento\Store\Model\StoreManagerInterface $storeManager
+            \Magento\Store\Model\StoreManagerInterface $storeManager,
+            \Magento\Framework\App\Config\Storage\WriterInterface $configWriter
     ) {
         $this->context = $context;
         $this->request = $request;
@@ -249,6 +256,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper {
         $this->encryptor = $encryptor;
         $this->urlInterfaceFactory = $urlInterfaceFactory;
         $this->storeManager = $storeManager;
+        $this->configWriter = $configWriter;
         parent::__construct(
                 $helperContext
         );
@@ -1166,7 +1174,29 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper {
      * @return type
      */
     public function getAuthToken($storeCode = null, $store = \Magento\Store\Model\ScopeInterface::SCOPE_STORE) {
-        return $this->getConfigValue("XML_CONFIG_AUTH_TOKEN", $store, $storeCode);
+        $authToken = $this->getConfigValue("XML_CONFIG_AUTH_TOKEN", $store, $storeCode);
+        if ($authToken === null || $authToken === '') {
+            return $authToken;
+        }
+        if (substr_count($authToken, '.') === 2) {
+            return $authToken;
+        }
+        return (string) $this->encryptor->decrypt($authToken);
+    }
+
+    /**
+     * Encrypt and persist the auth token, mirroring how other sensitive config values are stored
+     *
+     * @param string $authToken
+     * @param string $scope
+     * @return void
+     */
+    public function saveAuthToken($authToken, $scope = 'default') {
+        $this->configWriter->save(
+                self::XML_CONFIG_AUTH_TOKEN,
+                $this->encryptor->encrypt((string) $authToken),
+                $scope
+        );
     }
     
     /**

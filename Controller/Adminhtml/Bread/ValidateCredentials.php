@@ -133,13 +133,13 @@ class ValidateCredentials extends \Magento\Backend\App\Action {
                 
                 if (isset($response['token'])) {
                     $tenantLoaded = true;
-                    $this->configWriter->save('payment/breadcheckout/bread_auth_token', $response['token'], 'default');
+                    $this->dataHelper->saveAuthToken($response['token']);
                     $this->configWriter->save('payment/breadcheckout/tenant', $tenant, 'default');
                     return true;
                 }
             }
             // Case for all api urls calls returning status != 200 or token is not set in response
-            $this->configWriter->save('payment/breadcheckout/bread_auth_token', "0", 'default');
+            $this->dataHelper->saveAuthToken("0");
             $this->configWriter->save('payment/breadcheckout/tenant', $tenant, 'default');
             return false;
         } catch (Exception $ex) {

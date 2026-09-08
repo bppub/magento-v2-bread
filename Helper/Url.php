@@ -17,10 +17,11 @@ class Url extends Data
         \Magento\Framework\Encryption\Encryptor $encryptor,
         \Magento\Framework\UrlInterfaceFactory $urlInterfaceFactory,
         \Magento\Framework\Url $urlHelper,
-        \Magento\Store\Model\StoreManagerInterface $storeManager    
+        \Magento\Store\Model\StoreManagerInterface $storeManager,
+        \Magento\Framework\App\Config\Storage\WriterInterface $configWriter
     ) {
         $this->urlHelper = $urlHelper;
-        parent::__construct($helperContext, $context, $request, $encryptor, $urlInterfaceFactory, $storeManager);
+        parent::__construct($helperContext, $context, $request, $encryptor, $urlInterfaceFactory, $storeManager, $configWriter);
     }
 
     /**
