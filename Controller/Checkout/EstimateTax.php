@@ -66,8 +66,9 @@ class EstimateTax extends \Bread\BreadCheckout\Controller\Checkout
      */
     public function execute()
     {
-        $data       = json_decode($this->getRequest()->getParams()['shippingInfo'], true);
         try {
+            $shippingInfo       = $this->getRequest()->getParam('shippingInfo');
+            $data               = is_string($shippingInfo) ? json_decode($shippingInfo, true) : null;
             $shippingAddress    = $this->getShippingAddressForQuote($data);
             if (!$shippingAddress instanceof \Magento\Quote\Model\Quote\Address) {
                 throw new \Magento\Framework\Exception\LocalizedException(
