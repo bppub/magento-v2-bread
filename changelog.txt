@@ -1,6 +1,6 @@
 == Changelog ==
 
-= 2.5.0
+= 2.5.1
 * Current release
 * Fix Hyva checkout
 * Security Fixes for the following : Secure AJAX requests, Quote ownership checks, 
