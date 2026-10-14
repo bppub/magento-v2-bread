@@ -6,11 +6,14 @@
  * @author Joel    @Mediotype
  * @author Miranda @Mediotype
  */
+declare(strict_types=1);
+
 namespace Bread\BreadCheckout\Model\System\Config\Source;
 
-class ApiMode implements \Magento\Framework\Option\ArrayInterface
-{
+use Magento\Framework\Data\OptionSourceInterface;
 
+class ApiMode implements OptionSourceInterface
+{
     /**
      * Options getter
      *

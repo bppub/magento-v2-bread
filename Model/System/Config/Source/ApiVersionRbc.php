@@ -1,5 +1,4 @@
 <?php
-
 /**
  * API version options
  *
@@ -7,11 +6,14 @@
  * @since 2.1.0
  * @author Kiprotich, Maritim <kip.maritim@breadfinancial.com>
  */
+declare(strict_types=1);
 
 namespace Bread\BreadCheckout\Model\System\Config\Source;
 
-class ApiVersionRbc implements \Magento\Framework\Option\ArrayInterface {
+use Magento\Framework\Data\OptionSourceInterface;
 
+class ApiVersionRbc implements OptionSourceInterface
+{
     /**
      * Options getter
      *
@@ -33,5 +35,4 @@ class ApiVersionRbc implements \Magento\Framework\Option\ArrayInterface {
             'bread_2' => __('Bread 2.0')
         ];
     }
-
 }

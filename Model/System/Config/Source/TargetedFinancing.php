@@ -1,8 +1,11 @@
 <?php
+declare(strict_types = 1);
 
 namespace Bread\BreadCheckout\Model\System\Config\Source;
 
-class TargetedFinancing implements \Magento\Framework\Option\ArrayInterface
+use Magento\Framework\Data\OptionSourceInterface;
+
+class TargetedFinancing implements OptionSourceInterface
 {
     /**
      * Options getter
@@ -11,7 +14,11 @@ class TargetedFinancing implements \Magento\Framework\Option\ArrayInterface
      */
     public function toOptionArray()
     {
-        return [['value' => 0, 'label' => __('No')], ['value' => 1, 'label' => __('By Cart Size')], ['value' => 2, 'label' => __('By SKU List')]];
+        return [
+            ['value' => 0, 'label' => __('No')],
+            ['value' => 1, 'label' => __('By Cart Size')],
+            ['value' => 2, 'label' => __('By SKU List')]
+        ];
     }
 
     /**
@@ -21,6 +28,10 @@ class TargetedFinancing implements \Magento\Framework\Option\ArrayInterface
      */
     public function toArray()
     {
-        return [0 => __('No'), 1 => __('By Cart Size'), 2 => __('By SKU List')];
+        return [
+            0 => __('No'),
+            1 => __('By Cart Size'),
+            2 => __('By SKU List')
+        ];
     }
 }
