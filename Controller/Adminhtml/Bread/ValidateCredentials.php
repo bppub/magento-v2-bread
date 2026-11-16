@@ -118,7 +118,6 @@ class ValidateCredentials extends \Magento\Backend\App\Action {
 
             $result = curl_exec($curl);
             $status = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-            curl_close($curl);
             if ($status != 200) {
                 $this->logger->log(
                         [
