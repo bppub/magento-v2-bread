@@ -105,6 +105,11 @@ class LandingPage extends \Magento\Framework\App\Action\Action implements CsrfAw
      */
     public $orderRepository;
 
+    /**
+     * @var \Magento\Quote\Model\ResourceModel\Quote
+     */
+    private $quoteResource;
+
     public function __construct(
         \Magento\Framework\App\Request\Http $request,
         \Bread\BreadCheckout\Model\Payment\Api\Client $paymentApiClient,
@@ -125,8 +130,10 @@ class LandingPage extends \Magento\Framework\App\Action\Action implements CsrfAw
         \Magento\Framework\App\Action\Context $context,
         \Magento\Sales\Api\OrderRepositoryInterface $orderRepository,
         \Bread\BreadCheckout\Helper\Quote $quoteHelper,
-        \Bread\BreadCheckout\Helper\Customer $customerHelper
+        \Bread\BreadCheckout\Helper\Customer $customerHelper,
+        \Magento\Quote\Model\ResourceModel\Quote $quoteResource
     ) {
+        $this->quoteResource = $quoteResource;
 
         $this->request                  = $request;
         $this->paymentApiClient         = $paymentApiClient;
@@ -154,7 +161,7 @@ class LandingPage extends \Magento\Framework\App\Action\Action implements CsrfAw
     /**
      * Convert cart to order
      *
-     * @return \Magento\Framework\Controller\Result\Json
+     * @return void
      */
     public function execute()
     {
@@ -339,7 +346,8 @@ class LandingPage extends \Magento\Framework\App\Action\Action implements CsrfAw
             $quote->setCustomerIsGuest(true);
         }
 
-        $quote->setTotalsCollectedFlag(false)->collectTotals()->save();
+        $quote->setTotalsCollectedFlag(false)->collectTotals();
+        $this->quoteResource->save($quote);
 
         $quote->getPayment()->importData(['method' => 'breadcheckout']);
         $quote->getPayment()->setTransactionId($transactionId);
@@ -405,7 +413,8 @@ class LandingPage extends \Magento\Framework\App\Action\Action implements CsrfAw
         $cartItems = $cart->getItems();
         // @codingStandardsIgnoreStart
         foreach ($cartItems as $item) {
-            $quote->removeItem($item->getId())->save();
+            $quote->removeItem($item->getId());
+            $this->quoteResource->save($quote);
         }
 
         // @codingStandardsIgnoreEnd

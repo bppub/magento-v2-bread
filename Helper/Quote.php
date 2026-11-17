@@ -447,7 +447,7 @@ class Quote extends Data
     /**
      * Get Tooltip message to show on payment method
      *
-     * @return string
+     * @return string|null
      */
     public function getMethodTooltip()
     {

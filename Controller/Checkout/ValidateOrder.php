@@ -75,6 +75,11 @@ class ValidateOrder extends \Bread\BreadCheckout\Controller\Checkout
      */
     public $orderSender;
 
+    /**
+     * @var \Magento\Quote\Model\ResourceModel\Quote
+     */
+    private $quoteResource;
+
     public function __construct(
         \Magento\Framework\App\Action\Context $context,
         \Bread\BreadCheckout\Model\Payment\Api\Client $paymentApiClient,
@@ -92,8 +97,10 @@ class ValidateOrder extends \Bread\BreadCheckout\Controller\Checkout
         \Magento\Framework\DataObjectFactory $dataObjectFactory,
         \Magento\Quote\Model\Quote\TotalsCollector $totalsCollector,
         \Magento\Quote\Api\CartRepositoryInterface $quoteRepository,
-        \Magento\Sales\Model\Order\Email\Sender\OrderSender $orderSender
+        \Magento\Sales\Model\Order\Email\Sender\OrderSender $orderSender,
+        \Magento\Quote\Model\ResourceModel\Quote $quoteResource
     ) {
+        $this->quoteResource = $quoteResource;
     
         $this->paymentApiClient = $paymentApiClient;
         $this->checkoutSession = $checkoutSession;
@@ -127,7 +134,7 @@ class ValidateOrder extends \Bread\BreadCheckout\Controller\Checkout
     /**
      * Validate and process the order
      *
-     * @return $this|\Magento\Framework\App\ResponseInterface|\Magento\Framework\Controller\ResultInterface
+     * @return \Magento\Framework\Controller\Result\Redirect|null
      */
     public function execute()
     {
@@ -248,7 +255,8 @@ class ValidateOrder extends \Bread\BreadCheckout\Controller\Checkout
             $quote->setCustomer($customer->getDataModel());
         }
 
-        $quote->setTotalsCollectedFlag(false)->collectTotals()->save();
+        $quote->setTotalsCollectedFlag(false)->collectTotals();
+        $this->quoteResource->save($quote);
 
         $quote->getPayment()->importData(['method' => 'breadcheckout']);
         $quote->getPayment()->setTransactionId($breadTransactionId);

@@ -72,6 +72,8 @@ class EncryptAuthTokens implements DataPatchInterface
 
         $this->cacheTypeList->cleanType(Config::TYPE_IDENTIFIER);
         $this->moduleDataSetup->endSetup();
+
+        return $this;
     }
 
     private function isEncryptedValue($value)

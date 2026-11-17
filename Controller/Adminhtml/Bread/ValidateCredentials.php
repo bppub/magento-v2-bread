@@ -142,7 +142,7 @@ class ValidateCredentials extends \Magento\Backend\App\Action {
             $this->dataHelper->saveAuthToken("0");
             $this->configWriter->save('payment/breadcheckout/tenant', $tenant, 'default');
             return false;
-        } catch (Exception $ex) {
+        } catch (\Exception $ex) {
             $this->configWriter->save('payment/breadcheckout/tenant', $tenant, 'default');
             $this->logger->log(
                     [
