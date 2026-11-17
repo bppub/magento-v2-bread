@@ -343,8 +343,7 @@ abstract class Checkout extends \Magento\Framework\App\Action\Action
                 }
                 break;
             default:
-                $quote = $this->checkoutSession->getQuote();
-                break;
+                throw new \Magento\Framework\Exception\LocalizedException(__('Unknown checkout source.'));
         }
 
         $address    = $quote->getShippingAddress();
