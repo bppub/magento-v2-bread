@@ -78,6 +78,12 @@ class ProductCollection extends Template
     public $catalogHelper;
     
     protected $_objectManager = null;
+
+    /**
+     * @var \Magento\Catalog\Model\ResourceModel\Category
+     */
+    private $categoryResource;
+
     /**
      * CatProductCollection constructor.
      * @param Context $context
@@ -100,10 +106,12 @@ class ProductCollection extends Template
         \Bread\BreadCheckout\Helper\Catalog $catalogHelper,
         \Bread\BreadCheckout\Helper\Quote $quoteHelper,
         \Bread\BreadCheckout\Helper\Data $dataHelper,    
+        \Magento\Catalog\Model\ResourceModel\Category $categoryResource,
         array $data = []
     ) {
         parent::__construct($context, $data);
 
+        $this->categoryResource = $categoryResource;
         $this->_registry = $registry;
         $this->_categoryFactory = $categoryFactory;
         $this->_productCollectionFactory = $productCollectionFactory;
@@ -128,7 +136,8 @@ class ProductCollection extends Template
         $categoryId = $category_load->getId();
         if ($this->categoryHelper->isEnabledForCategory($category_load)) {
             //load product collection of category id wise
-            $category_product_collection = $this->_categoryFactory->create()->load($categoryId);
+            $category_product_collection = $this->_categoryFactory->create();
+            $this->categoryResource->load($category_product_collection, $categoryId);
             $collection = $this->_productCollectionFactory->create();
             
             //Paginate collection

@@ -38,6 +38,11 @@ class DispatchShipmentInfo implements \Magento\Framework\Event\ObserverInterface
     private $transactionFactory;
 
     /**
+     * @var \Magento\Sales\Model\ResourceModel\Order\Payment\Transaction
+     */
+    private $transactionResource;
+
+    /**
      * DispatchShipmentInfo constructor.
      *
      * @param \Bread\BreadCheckout\Model\Payment\Method\Bread $breadPayment
@@ -47,13 +52,15 @@ class DispatchShipmentInfo implements \Magento\Framework\Event\ObserverInterface
         \Bread\BreadCheckout\Model\Payment\Api\Client $client,
         \Bread\BreadCheckout\Helper\Data $helper,
         \Bread\BreadCheckout\Helper\Log $logger,
-        \Magento\Sales\Model\Order\Payment\TransactionFactory $transactionFactory
+        \Magento\Sales\Model\Order\Payment\TransactionFactory $transactionFactory,
+        \Magento\Sales\Model\ResourceModel\Order\Payment\Transaction $transactionResource
     ) {
         $this->breadPayment = $breadPaymentMethodFactory->create();
         $this->client = $client;
         $this->helper = $helper;
         $this->logger = $logger;
         $this->transactionFactory = $transactionFactory;
+        $this->transactionResource = $transactionResource;
     }
 
     /**
@@ -90,7 +97,8 @@ class DispatchShipmentInfo implements \Magento\Framework\Event\ObserverInterface
             $trackingNumber = $shipmentTrack->getNumber();
             $carrierCode = $shipmentTrack->getCarrierCode();
 
-            $transaction = $this->transactionFactory->create()->load($payment->getEntityId(), 'payment_id');
+            $transaction = $this->transactionFactory->create();
+            $this->transactionResource->load($transaction, $payment->getEntityId(), 'payment_id');
 
             try {
 

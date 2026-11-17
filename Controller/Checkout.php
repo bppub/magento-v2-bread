@@ -342,6 +342,8 @@ abstract class Checkout extends \Magento\Framework\App\Action\Action
                     }
                 }
                 break;
+            default:
+                throw new \Magento\Framework\Exception\LocalizedException(__('Unknown checkout source.'));
         }
 
         $address    = $quote->getShippingAddress();
@@ -368,8 +370,11 @@ abstract class Checkout extends \Magento\Framework\App\Action\Action
             parse_str($data['buy_request'], $buyRequest);
         }
 
-        $mainProduct = $this->catalogProductFactory->create()->load($mainProductId);
-        $simpleProduct = $this->catalogProductFactory->create()->load($selectedProductId);
+        $productResource = $this->catalogResourceModelProductFactory->create();
+        $mainProduct = $this->catalogProductFactory->create();
+        $productResource->load($mainProduct, $mainProductId);
+        $simpleProduct = $this->catalogProductFactory->create();
+        $productResource->load($simpleProduct, $selectedProductId);
         // Qty always 1 when checking out from product view
         $this->addItemToQuote($quote, $simpleProduct, $mainProduct, $buyRequest, $customOptionPieces, 1);
         // Flag to prevent same item from getting added to quote many times

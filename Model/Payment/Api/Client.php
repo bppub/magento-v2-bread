@@ -591,6 +591,9 @@ class Client extends \Magento\Framework\Model\AbstractModel
             }
         } else {
             // @codingStandardsIgnoreStart
+            $curl = null;
+            $status = null;
+            $result = null;
             try {
                 $curl = curl_init($url);
                 curl_setopt($curl, CURLOPT_HEADER, 0);
@@ -648,7 +651,9 @@ class Client extends \Magento\Framework\Model\AbstractModel
                     'RESULT' => $result
                 ]);
 
-                curl_close($curl);
+                if ($curl) {
+                    curl_close($curl);
+                }
                 throw $e;
             }
 

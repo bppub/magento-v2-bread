@@ -336,7 +336,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper {
      * Get API Secret Key
      *
      * @param  null $store
-     * @return string
+     * @return string|null
      */
     public function getApiSecretKey($breadApiVersion = null, $storeCode = null, $store = \Magento\Store\Model\ScopeInterface::SCOPE_STORE) {
         $apiVersion = $this->getApiVersion();
@@ -599,7 +599,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper {
      * @return string
      */
     public function getPaymentMethodTitle($store = \Magento\Store\Model\ScopeInterface::SCOPE_STORE) {
-        return (string) $this->__("" . $this->getConfigValue("XML_CONFIG_CHECKOUT_TITLE", $store));
+        return (string) __("" . $this->getConfigValue("XML_CONFIG_CHECKOUT_TITLE", $store));
     }
 
     /**

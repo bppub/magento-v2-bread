@@ -527,6 +527,8 @@ class Rbc extends \Magento\Payment\Model\Method\AbstractMethod
         if (array_key_exists('message', $transactionAdditionalInfo)) {
             $transaction->setMessage($transactionAdditionalInfo['message']);
         }
+
+        return $this;
     }
 
     /**
@@ -550,6 +552,7 @@ class Rbc extends \Magento\Payment\Model\Method\AbstractMethod
         $this->breadLogger->info([
             'order currency' => $payment->getOrder()->getOrderCurrencyCode()
         ]);
+        $result = null;
         switch ($requestType) {
             case self::ACTION_AUTHORIZE:
                 $this->breadLogger->info('about to call api client authorize');
@@ -662,7 +665,7 @@ class Rbc extends \Magento\Payment\Model\Method\AbstractMethod
      * @param  array                                $transactionAdditionalInfo
      * @param  array                                $transactionDetails
      * @param  null                                 $message
-     * @return \Magento\Payment\Model\InfoInterface
+     * @return \Magento\Payment\Model\InfoInterface|null
      */
     protected function addTransactionInfo(
         \Magento\Payment\Model\InfoInterface $payment,
